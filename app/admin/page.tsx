@@ -678,6 +678,9 @@ export default function AdminDashboard() {
                   border: '1px dashed #B9BEC7',
                   borderRadius: '6px',
                   padding: '18px',
+                  // Paper slip: force dark ink — the dark theme's light body
+                  // color must not leak into this deliberately light block.
+                  color: '#1A1A1A',
                 }}
               >
                 <div
