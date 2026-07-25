@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { config, modeLabel } from "@/lib/config";
@@ -14,6 +15,7 @@ const NAV = [
 
 export default function Header() {
   const pathname = usePathname() || "/";
+  const [open, setOpen] = useState(false);
   return (
     <div
       style={{
@@ -117,6 +119,7 @@ export default function Header() {
             href={`https://wa.me/${config.whatsappNumber}`}
             target="_blank"
             rel="noreferrer"
+            className="hidden sm:block"
             style={{ fontSize: 13, fontWeight: 600, color: "#1B3A6B", whiteSpace: "nowrap", flex: "none" }}
           >
             WhatsApp
@@ -137,8 +140,62 @@ export default function Header() {
           >
             Order now
           </Link>
+          <button
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((v) => !v)}
+            className="ve-burger"
+            style={{
+              background: "none",
+              border: "1px solid #D8D2C4",
+              borderRadius: 6,
+              padding: "8px 10px",
+              cursor: "pointer",
+              flex: "none",
+            }}
+          >
+            <span style={{ display: "block", width: 16, height: 2, background: "#1A1A1A", transform: open ? "translateY(6px) rotate(45deg)" : "none", transition: "transform .15s" }} />
+            <span style={{ display: "block", width: 16, height: 2, background: "#1A1A1A", opacity: open ? 0 : 1, transition: "opacity .15s" }} />
+            <span style={{ display: "block", width: 16, height: 2, background: "#1A1A1A", transform: open ? "translateY(-6px) rotate(-45deg)" : "none", transition: "transform .15s" }} />
+          </button>
         </div>
       </div>
+
+      {open && (
+        <nav
+          className="md:hidden"
+          style={{ borderTop: "1px solid #E7E4DC", background: "#FAFAF8" }}
+        >
+          {NAV.map((n) => {
+            const active = n.match(pathname);
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                onClick={() => setOpen(false)}
+                style={{
+                  display: "block",
+                  padding: "14px 20px",
+                  fontSize: 15,
+                  fontWeight: active ? 700 : 600,
+                  color: active ? "#1B3A6B" : "#1A1A1A",
+                  borderBottom: "1px solid #F0EDE5",
+                  borderLeft: active ? "2px solid #1B3A6B" : "2px solid transparent",
+                }}
+              >
+                {n.label}
+              </Link>
+            );
+          })}
+          <a
+            href={`https://wa.me/${config.whatsappNumber}`}
+            target="_blank"
+            rel="noreferrer"
+            style={{ display: "block", padding: "14px 20px", fontSize: 15, fontWeight: 600, color: "#1B3A6B" }}
+          >
+            WhatsApp us
+          </a>
+        </nav>
+      )}
     </div>
   );
 }

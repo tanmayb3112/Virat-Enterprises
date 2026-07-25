@@ -43,6 +43,7 @@ npm run dev                  # http://localhost:3000
 |-------|------|
 | `/` | Home — hero, rate card, services, shops, franchise teaser |
 | `/order` | Print-order wizard (upload → options → preview → branch → pay) |
+| `/order/[token]` | Public order-status tracker (live once Supabase is connected) |
 | `/branches` | All 6 shops, map, directions, LocalBusiness schema |
 | `/franchise` | Franchise landing + ROI calculator + lead form |
 | `/admin` | Staff order queue + job ticket + delivery panel (demo data) |

@@ -85,7 +85,7 @@ interface ReportRow {
 }
 
 const REPORT_ROWS: ReportRow[] = [
-  { time: '10:12', no: 'VE-MUK-202607-0142', branch: 'Mukund Nagar', job: 'Assignment 24 pp A4 B/W ×2 + colour cover', billed: 486, received: 486, fee: 0, status: 'PAID' },
+  { time: '10:12', no: 'VE-MUK-202607-0142', branch: 'Mukund Nagar', job: 'Assignment 24 pp A4 colour ×2 + colour cover, spiral', billed: 542, received: 542, fee: 0, status: 'PAID' },
   { time: '10:05', no: 'VE-MUK-202607-0141', branch: 'Mukund Nagar', job: 'Report ~120 pp A4 B/W ×3, hard binding', billed: 1240, received: 0, fee: 0, status: 'PAYMENT_PENDING_VERIFICATION' },
   { time: '9:52', no: 'VE-ABC-202607-0088', branch: 'ABC Chowk', job: 'Notes 340 pp A4 B/W ×1, spiral', billed: 730, received: 730, fee: 0, status: 'COMPLETED' },
   { time: '9:38', no: 'VE-MUK-202607-0140', branch: 'Mukund Nagar', job: 'A3 glossy poster ×8', billed: 320, received: 320, fee: 0, status: 'PRINTING' },
@@ -102,26 +102,33 @@ interface BranchStat {
   billed: number;
   received: number;
 }
-const BRANCH_STATS: BranchStat[] = [
-  { name: 'Mukund Nagar', billed: 12480, received: 12480 },
-  { name: 'ABC Chowk', billed: 15240, received: 14990 },
-  { name: 'JM Road', billed: 9860, received: 8300 },
-  { name: 'Satara Road (MM Digital)', billed: 7420, received: 7420 },
-  { name: 'Shanti Nagar', billed: 4180, received: 3900 },
-];
+// Derived from REPORT_ROWS so every widget on this screen reconciles exactly.
+const BRANCH_STATS: BranchStat[] = Array.from(
+  REPORT_ROWS.reduce((m, r) => {
+    const cur = m.get(r.branch) ?? { name: r.branch, billed: 0, received: 0 };
+    cur.billed += r.billed;
+    cur.received += r.received;
+    return m.set(r.branch, cur);
+  }, new Map<string, BranchStat>()).values()
+).sort((a, b) => b.billed - a.billed);
 
+// Plausible split of today's billed total (sums to the metric strip exactly).
 const TOP_SERVICES: { name: string; amount: number }[] = [
-  { name: 'B/W printing (A4)', amount: 21400 },
-  { name: 'Colour printing', amount: 14800 },
-  { name: 'Binding & finishing', amount: 8600 },
-  { name: 'Large-format / CAD', amount: 5900 },
-  { name: 'Lamination', amount: 3790 },
+  { name: 'B/W printing (A4)', amount: 4420 },
+  { name: 'Colour printing', amount: 3286 },
+  { name: 'Binding & finishing', amount: 1180 },
+  { name: 'Large-format / CAD', amount: 780 },
+  { name: 'Lamination', amount: 466 },
 ];
 
 const MISMATCHES: { title: string; body: string }[] = [
   {
     title: 'JM Road — gap ' + inr(1560),
     body: 'VE-JMR-202607-0054 cancelled after printing; refund needed.',
+  },
+  {
+    title: 'Mukund Nagar — gap ' + inr(1240),
+    body: 'VE-MUK-202607-0141 UTR submitted at 10:05 — verify in the bank app.',
   },
   {
     title: 'Shanti Nagar — gap ' + inr(280),
@@ -155,7 +162,7 @@ export default function ReportsPage() {
   const toChase = REPORT_ROWS.filter((r) => r.received < r.billed && r.status !== 'CANCELLED').length;
 
   const metrics: { label: string; value: string; sub: string; color?: string }[] = [
-    { label: 'ORDERS', value: String(ordersCount), sub: '5 branches' },
+    { label: 'ORDERS', value: String(ordersCount), sub: `${new Set(REPORT_ROWS.map((r) => r.branch)).size} branches` },
     { label: 'BILLED', value: inr(billedTotal), sub: 'all jobs raised' },
     { label: 'RECEIVED', value: inr(receivedTotal), sub: 'Razorpay + verified UPI', color: '#1F6B3E' },
     { label: 'GAP', value: inr(gapTotal), sub: `${toChase} orders to chase`, color: '#B23B3B' },

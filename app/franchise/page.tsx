@@ -101,6 +101,10 @@ export default function FranchisePage() {
       if (key.toLowerCase().startsWith("utm_")) utm[key] = val;
     });
     utmRef.current = utm;
+    // Ad-landing conversion signal (spec §7): franchise page view.
+    if (typeof window.fbq === "function") {
+      window.fbq("track", "ViewContent", { content_name: "franchise" });
+    }
   }, []);
 
   // ---- ROI maths (mirrors prototype) ----

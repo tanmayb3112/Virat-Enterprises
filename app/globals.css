@@ -91,6 +91,18 @@ input[type="range"] {
   transition: transform 0.18s;
 }
 
+/* Mobile hamburger — shown below the md breakpoint only. */
+.ve-burger {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+@media (min-width: 768px) {
+  .ve-burger {
+    display: none;
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;

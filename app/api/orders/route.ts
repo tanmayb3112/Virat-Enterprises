@@ -34,6 +34,28 @@ function genOrderNo(branchName: string): { orderNo: string; token: string } {
   return { orderNo: `VE-${branchCode(branchName)}-${ym}-${rnd}`, token };
 }
 
+// Public order lookup by token (for the /order/[token] tracker page).
+// Returns { order: null } when Supabase isn't configured or nothing matches.
+export async function GET(req: NextRequest) {
+  const token = req.nextUrl.searchParams.get("token");
+  if (!token) return NextResponse.json({ ok: false, error: "missing_token" }, { status: 400 });
+
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return NextResponse.json({ ok: true, order: null, tracked: false });
+
+  try {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("order_no,status,delivery_type,total,created_at,branch_id")
+      .eq("token", token)
+      .maybeSingle();
+    if (error || !data) return NextResponse.json({ ok: true, order: null, tracked: false });
+    return NextResponse.json({ ok: true, order: data, tracked: true });
+  } catch {
+    return NextResponse.json({ ok: true, order: null, tracked: false });
+  }
+}
+
 export async function POST(req: NextRequest) {
   let body: Body;
   try {
