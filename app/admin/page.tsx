@@ -273,14 +273,14 @@ function statusLabel(s: Status): string {
 }
 
 const PILL_MAP: Record<Status, [string, string]> = {
-  RECEIVED: ['#EDF2FA', '#1B3A6B'],
-  PAYMENT_PENDING_VERIFICATION: ['#FBF0E2', '#8A5A22'],
-  PAID: ['#EAF3EC', '#1F6B3E'],
-  PRINTING: ['#EFEAFB', '#5B3FA8'],
-  READY: ['#E8F2F7', '#1B6584'],
-  OUT_FOR_DELIVERY: ['#FBF0E2', '#B4610F'],
-  COMPLETED: ['#EFEEE9', '#6F6B62'],
-  CANCELLED: ['#FAEDED', '#B23B3B'],
+  RECEIVED: ['#1C2836', '#9DC1F0'],
+  PAYMENT_PENDING_VERIFICATION: ['#33270E', '#E8B25C'],
+  PAID: ['#152B1C', '#7ED09A'],
+  PRINTING: ['#241D38', '#C4B1F5'],
+  READY: ['#132831', '#8FD0E8'],
+  OUT_FOR_DELIVERY: ['#33240D', '#F5C173'],
+  COMPLETED: ['#26261F', '#B9B6AC'],
+  CANCELLED: ['#331717', '#F09A9A'],
 };
 function pill(status: Status): CSSProperties {
   const [bg, color] = PILL_MAP[status];
@@ -296,7 +296,7 @@ function pill(status: Status): CSSProperties {
   };
 }
 function fileBadge(ext: FileItem['ext']): CSSProperties {
-  const c = ext === 'PDF' ? '#B23B3B' : ext === 'JPG' ? '#1F6B3E' : '#1B3A6B';
+  const c = ext === 'PDF' ? '#F08A8A' : ext === 'JPG' ? '#6FCF8E' : '#FFC400';
   return {
     width: '40px',
     height: '40px',
@@ -309,7 +309,7 @@ function fileBadge(ext: FileItem['ext']): CSSProperties {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#fff',
+    background: '#1C1C18',
   };
 }
 function chipStyle(active: boolean): CSSProperties {
@@ -317,9 +317,9 @@ function chipStyle(active: boolean): CSSProperties {
     ? {
         padding: '9px 15px',
         borderRadius: '6px',
-        border: '1px solid #1B3A6B',
-        background: '#1B3A6B',
-        color: '#fff',
+        border: '1px solid #FFC400',
+        background: '#FFC400',
+        color: '#111',
         fontSize: '13px',
         fontWeight: 700,
         cursor: 'pointer',
@@ -328,9 +328,9 @@ function chipStyle(active: boolean): CSSProperties {
     : {
         padding: '9px 15px',
         borderRadius: '6px',
-        border: '1px solid #D8D2C4',
-        background: '#fff',
-        color: '#55524A',
+        border: '1px solid #3E3E36',
+        background: '#1C1C18',
+        color: '#F2F0E9',
         fontSize: '13px',
         fontWeight: 600,
         cursor: 'pointer',
@@ -342,9 +342,9 @@ function smallChip(active: boolean): CSSProperties {
     ? {
         padding: '7px 12px',
         borderRadius: '6px',
-        border: '1px solid #1B3A6B',
-        background: '#1B3A6B',
-        color: '#fff',
+        border: '1px solid #FFC400',
+        background: '#FFC400',
+        color: '#111',
         fontSize: '12px',
         fontWeight: 700,
         cursor: 'pointer',
@@ -353,9 +353,9 @@ function smallChip(active: boolean): CSSProperties {
     : {
         padding: '7px 12px',
         borderRadius: '6px',
-        border: '1px solid #D8D2C4',
-        background: '#fff',
-        color: '#55524A',
+        border: '1px solid #3E3E36',
+        background: '#1C1C18',
+        color: '#F2F0E9',
         fontSize: '12px',
         fontWeight: 600,
         cursor: 'pointer',
@@ -432,8 +432,8 @@ export default function AdminDashboard() {
     : 'Book as a cash/COD parcel — delivery charges at actuals, collected by the delivery partner ₹ on receipt.';
   const ruleBoxStyle: CSSProperties = {
     marginTop: '10px',
-    borderLeft: '2px solid ' + (so.free ? '#1F6B3E' : '#F5821F'),
-    color: so.free ? '#1F6B3E' : '#8A5A22',
+    borderLeft: '2px solid ' + (so.free ? '#6FCF8E' : '#E8B25C'),
+    color: so.free ? '#6FCF8E' : '#E8B25C',
     paddingLeft: '14px',
   };
 
@@ -484,21 +484,21 @@ export default function AdminDashboard() {
           justifyContent: 'space-between',
           gap: '24px',
           flexWrap: 'wrap',
-          borderBottom: '1px solid #E7E4DC',
+          borderBottom: '1px solid #2E2E29',
           paddingBottom: '22px',
         }}
       >
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#8A8578' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
             ORDERS DASHBOARD
           </div>
-          <h1 style={{ margin: '10px 0 0', fontSize: '34px', fontWeight: 800, letterSpacing: '-.025em' }}>
+          <h1 style={{ margin: '10px 0 0', fontSize: '34px', fontWeight: 800, letterSpacing: '-.025em', color: '#F2F0E9' }}>
             Mukund Nagar
           </h1>
-          <div style={{ fontSize: '13px', color: '#8A8578', marginTop: '5px' }}>
+          <div style={{ fontSize: '13px', color: '#9A968A', marginTop: '5px' }}>
             Live queue · Realtime activates with Supabase · staff@virat.co.in
           </div>
-          <div style={{ fontSize: '12px', color: '#B0AB9F', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: '#6E6B62', marginTop: '4px' }}>
             Demo data — live Realtime streaming activates once Supabase is configured.
           </div>
         </div>
@@ -525,7 +525,7 @@ export default function AdminDashboard() {
         {/* LEFT queue */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {queue.length === 0 && (
-            <div style={{ fontSize: '13px', color: '#8A8578', padding: '16px 0' }}>
+            <div style={{ fontSize: '13px', color: '#9A968A', padding: '16px 0' }}>
               No orders in this view.
             </div>
           )}
@@ -544,15 +544,15 @@ export default function AdminDashboard() {
                   textAlign: 'left',
                   width: '100%',
                   cursor: 'pointer',
-                  background: selected ? '#fff' : 'transparent',
+                  background: selected ? '#1C1C18' : 'transparent',
                   padding: '16px',
                   border: 0,
-                  borderLeft: '2px solid ' + (selected ? '#1B3A6B' : 'transparent'),
-                  borderBottom: '1px solid #E7E4DC',
+                  borderLeft: '2px solid ' + (selected ? '#FFC400' : 'transparent'),
+                  borderBottom: '1px solid #2E2E29',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                  <div className="mono" style={{ fontSize: '12px', fontWeight: 600, color: '#1B3A6B' }}>
+                  <div className="mono" style={{ fontSize: '12px', fontWeight: 600, color: '#FFC400' }}>
                     {o.no}
                   </div>
                   <div style={pill(st)}>{statusLabel(st)}</div>
@@ -566,13 +566,13 @@ export default function AdminDashboard() {
                     gap: '10px',
                   }}
                 >
-                  <div style={{ fontSize: '14.5px', fontWeight: 700 }}>{o.name}</div>
-                  <div style={{ fontSize: '14.5px', fontWeight: 800 }}>{inr(orderTotal(o))}</div>
+                  <div style={{ fontSize: '14.5px', fontWeight: 700, color: '#F2F0E9' }}>{o.name}</div>
+                  <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#F2F0E9' }}>{inr(orderTotal(o))}</div>
                 </div>
-                <div style={{ fontSize: '12.5px', color: '#8A8578', marginTop: '4px', lineHeight: 1.45 }}>
+                <div style={{ fontSize: '12.5px', color: '#9A968A', marginTop: '4px', lineHeight: 1.45 }}>
                   {summary}
                 </div>
-                <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '11.5px', color: '#8A8578' }}>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '8px', fontSize: '11.5px', color: '#9A968A' }}>
                   <div>{o.delivery}</div>
                   <div>·</div>
                   <div>{o.age}</div>
@@ -584,12 +584,12 @@ export default function AdminDashboard() {
 
         {/* RIGHT detail card */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
-          <div style={{ border: '1px solid #E7E4DC', borderRadius: '8px', background: '#fff', minWidth: 0 }}>
+          <div style={{ border: '1px solid #2E2E29', borderRadius: '8px', background: '#1C1C18', minWidth: 0 }}>
             {/* detail header */}
             <div
               style={{
                 padding: '20px 24px',
-                borderBottom: '1px solid #E7E4DC',
+                borderBottom: '1px solid #2E2E29',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
@@ -598,10 +598,10 @@ export default function AdminDashboard() {
               }}
             >
               <div>
-                <div className="mono" style={{ fontSize: '18px', fontWeight: 600 }}>
+                <div className="mono" style={{ fontSize: '18px', fontWeight: 600, color: '#F2F0E9' }}>
                   {so.no}
                 </div>
-                <div style={{ fontSize: '13px', color: '#8A8578', marginTop: '4px' }}>
+                <div style={{ fontSize: '13px', color: '#9A968A', marginTop: '4px' }}>
                   {so.name} · {so.phone} · {so.age}
                 </div>
               </div>
@@ -611,7 +611,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={() => setStatus(so.no, 'PAID')}
                     style={{
-                      background: '#1F6B3E',
+                      background: '#2E7D4F',
                       color: '#fff',
                       border: 0,
                       borderRadius: '6px',
@@ -628,8 +628,8 @@ export default function AdminDashboard() {
                   className="h-blue"
                   onClick={() => setStatus(so.no, nextSt)}
                   style={{
-                    background: '#1B3A6B',
-                    color: '#fff',
+                    background: '#FFC400',
+                    color: '#111',
                     border: 0,
                     borderRadius: '6px',
                     padding: '9px 14px',
@@ -645,8 +645,8 @@ export default function AdminDashboard() {
                   onClick={() => setStatus(so.no, 'CANCELLED')}
                   style={{
                     background: 'none',
-                    border: '1px solid #D8D2C4',
-                    color: '#B23B3B',
+                    border: '1px solid #3E3E36',
+                    color: '#F08A8A',
                     borderRadius: '6px',
                     padding: '9px 14px',
                     fontSize: '13px',
@@ -763,7 +763,7 @@ export default function AdminDashboard() {
 
               {/* RIGHT column */}
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '.16em', color: '#8A8578' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '.16em', color: '#9A968A' }}>
                   FILES
                 </div>
                 <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column' }}>
@@ -774,7 +774,7 @@ export default function AdminDashboard() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '14px',
-                        borderBottom: '1px solid #F0EDE5',
+                        borderBottom: '1px solid #26261F',
                         padding: '11px 0',
                       }}
                     >
@@ -784,6 +784,7 @@ export default function AdminDashboard() {
                           style={{
                             fontSize: '13.5px',
                             fontWeight: 700,
+                            color: '#F2F0E9',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
@@ -791,16 +792,16 @@ export default function AdminDashboard() {
                         >
                           {it.file}
                         </div>
-                        <div style={{ fontSize: '11.5px', color: '#8A8578', marginTop: '2px' }}>{it.spec}</div>
+                        <div style={{ fontSize: '11.5px', color: '#9A968A', marginTop: '2px' }}>{it.spec}</div>
                       </div>
-                      <div style={{ fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}>{it.lineTotal}</div>
+                      <div style={{ fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap', color: '#F2F0E9' }}>{it.lineTotal}</div>
                       <button
                         className="h-ink"
                         onClick={(e) => e.preventDefault()}
                         style={{
                           background: 'none',
                           border: 0,
-                          color: '#1B3A6B',
+                          color: '#FFC400',
                           fontSize: '12.5px',
                           fontWeight: 700,
                           cursor: 'pointer',
@@ -814,8 +815,8 @@ export default function AdminDashboard() {
                 </div>
 
                 {pageCountEditable && (
-                  <div style={{ marginTop: '14px', borderLeft: '2px solid #F5821F', paddingLeft: '14px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#8A5A22' }}>
+                  <div style={{ marginTop: '14px', borderLeft: '2px solid #FFC400', paddingLeft: '14px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#E8B25C' }}>
                       Office file — page count from customer. Verify and correct:
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '9px', flexWrap: 'wrap' }}>
@@ -827,17 +828,18 @@ export default function AdminDashboard() {
                         style={{
                           width: '90px',
                           padding: '9px 11px',
-                          border: '1px solid #D8D2C4',
+                          border: '1px solid #3E3E36',
                           borderRadius: '6px',
-                          background: '#fff',
+                          background: '#1C1C18',
+                          color: '#F2F0E9',
                         }}
                       />
                       <button
                         onClick={repriceOrder}
                         style={{
                           background: 'none',
-                          border: '1px solid #8A5A22',
-                          color: '#8A5A22',
+                          border: '1px solid #E8B25C',
+                          color: '#E8B25C',
                           borderRadius: '6px',
                           padding: '9px 13px',
                           fontSize: '12.5px',
@@ -847,12 +849,12 @@ export default function AdminDashboard() {
                       >
                         Reprice &amp; notify customer
                       </button>
-                      <div style={{ fontSize: '12px', color: '#8A8578' }}>{repriceNote}</div>
+                      <div style={{ fontSize: '12px', color: '#9A968A' }}>{repriceNote}</div>
                     </div>
                   </div>
                 )}
 
-                <div style={{ marginTop: '24px', fontSize: '11px', fontWeight: 700, letterSpacing: '.16em', color: '#8A8578' }}>
+                <div style={{ marginTop: '24px', fontSize: '11px', fontWeight: 700, letterSpacing: '.16em', color: '#9A968A' }}>
                   BOOK DELIVERY
                 </div>
                 <div style={ruleBoxStyle}>
@@ -869,11 +871,11 @@ export default function AdminDashboard() {
                     gap: '12px',
                   }}
                 >
-                  <div style={{ border: '1px solid #E7E4DC', borderRadius: '6px', padding: '13px', minWidth: 0 }}>
-                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#8A8578' }}>
+                  <div style={{ border: '1px solid #2E2E29', borderRadius: '6px', padding: '13px', minWidth: 0 }}>
+                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#9A968A' }}>
                       PICKUP
                     </div>
-                    <div style={{ fontSize: '12.5px', lineHeight: 1.5, marginTop: '7px' }}>{pickupAddr}</div>
+                    <div style={{ fontSize: '12.5px', lineHeight: 1.5, marginTop: '7px', color: '#F2F0E9' }}>{pickupAddr}</div>
                     <button
                       onClick={() => copy(BRANCH.address, 'pickup')}
                       style={{
@@ -881,7 +883,7 @@ export default function AdminDashboard() {
                         background: 'none',
                         border: 0,
                         padding: 0,
-                        color: '#1B3A6B',
+                        color: '#FFC400',
                         fontSize: '12px',
                         fontWeight: 700,
                         cursor: 'pointer',
@@ -891,11 +893,11 @@ export default function AdminDashboard() {
                       {copied === 'pickup' ? 'Copied ✓' : 'Copy address'}
                     </button>
                   </div>
-                  <div style={{ border: '1px solid #E7E4DC', borderRadius: '6px', padding: '13px', minWidth: 0 }}>
-                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#8A8578' }}>
+                  <div style={{ border: '1px solid #2E2E29', borderRadius: '6px', padding: '13px', minWidth: 0 }}>
+                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#9A968A' }}>
                       DROP
                     </div>
-                    <div style={{ fontSize: '12.5px', lineHeight: 1.5, marginTop: '7px' }}>{so.drop}</div>
+                    <div style={{ fontSize: '12.5px', lineHeight: 1.5, marginTop: '7px', color: '#F2F0E9' }}>{so.drop}</div>
                     <button
                       onClick={() => copy(so.drop, 'drop')}
                       style={{
@@ -903,7 +905,7 @@ export default function AdminDashboard() {
                         background: 'none',
                         border: 0,
                         padding: 0,
-                        color: '#1B3A6B',
+                        color: '#FFC400',
                         fontSize: '12px',
                         fontWeight: 700,
                         cursor: 'pointer',
@@ -922,8 +924,8 @@ export default function AdminDashboard() {
                     target="_blank"
                     rel="noreferrer"
                     style={{
-                      background: '#1A1A1A',
-                      color: '#fff',
+                      background: '#F2F0E9',
+                      color: '#111',
                       fontSize: '12.5px',
                       fontWeight: 700,
                       padding: '10px 14px',
@@ -939,8 +941,8 @@ export default function AdminDashboard() {
                     className="h-outline"
                     style={{
                       background: 'none',
-                      border: '1px solid #1A1A1A',
-                      color: '#1A1A1A',
+                      border: '1px solid #57544B',
+                      color: '#F2F0E9',
                       fontSize: '12.5px',
                       fontWeight: 700,
                       padding: '9px 14px',
@@ -954,7 +956,7 @@ export default function AdminDashboard() {
                 {/* vendor + tracking + fee + actions */}
                 <div style={{ marginTop: '16px', display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                   <div>
-                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#8A8578' }}>
+                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#9A968A' }}>
                       VENDOR
                     </div>
                     <div style={{ display: 'flex', gap: '6px', marginTop: '7px' }}>
@@ -966,7 +968,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#8A8578' }}>
+                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#9A968A' }}>
                       TRACKING ID
                     </div>
                     <input
@@ -978,14 +980,15 @@ export default function AdminDashboard() {
                         marginTop: '7px',
                         width: '140px',
                         padding: '9px 11px',
-                        border: '1px solid #D8D2C4',
+                        border: '1px solid #3E3E36',
                         borderRadius: '6px',
-                        background: '#fff',
+                        background: '#1C1C18',
+                        color: '#F2F0E9',
                       }}
                     />
                   </div>
                   <div>
-                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#8A8578' }}>
+                    <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#9A968A' }}>
                       COURIER FEE ₹
                     </div>
                     <input
@@ -997,9 +1000,10 @@ export default function AdminDashboard() {
                         marginTop: '7px',
                         width: '100px',
                         padding: '9px 11px',
-                        border: '1px solid #D8D2C4',
+                        border: '1px solid #3E3E36',
                         borderRadius: '6px',
-                        background: '#fff',
+                        background: '#1C1C18',
+                        color: '#F2F0E9',
                       }}
                     />
                   </div>
@@ -1007,8 +1011,8 @@ export default function AdminDashboard() {
                     className="h-orange"
                     onClick={() => setStatus(so.no, 'OUT_FOR_DELIVERY')}
                     style={{
-                      background: '#F5821F',
-                      color: '#fff',
+                      background: '#FFC400',
+                      color: '#111',
                       border: 0,
                       borderRadius: '6px',
                       padding: '10px 15px',
@@ -1023,8 +1027,8 @@ export default function AdminDashboard() {
                     onClick={() => setStatus(so.no, 'COMPLETED')}
                     style={{
                       background: 'none',
-                      border: '1px solid #1F6B3E',
-                      color: '#1F6B3E',
+                      border: '1px solid #6FCF8E',
+                      color: '#6FCF8E',
                       borderRadius: '6px',
                       padding: '9px 15px',
                       fontSize: '13px',
@@ -1035,23 +1039,23 @@ export default function AdminDashboard() {
                     Mark delivered
                   </button>
                 </div>
-                <div style={{ fontSize: '12px', color: '#8A8578', marginTop: '10px' }}>{deliveryStateNote}</div>
+                <div style={{ fontSize: '12px', color: '#9A968A', marginTop: '10px' }}>{deliveryStateNote}</div>
               </div>
             </div>
 
             {/* AUDIT TRAIL footer */}
-            <div style={{ padding: '18px 24px', borderTop: '1px solid #E7E4DC' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '.16em', color: '#8A8578' }}>
+            <div style={{ padding: '18px 24px', borderTop: '1px solid #2E2E29' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '.16em', color: '#9A968A' }}>
                 AUDIT TRAIL
               </div>
               <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {so.events.map((e, k) => (
                   <div key={k} style={{ display: 'flex', gap: '14px', fontSize: '12.5px', alignItems: 'baseline' }}>
-                    <div className="mono" style={{ color: '#B0AB9F', width: '48px', flex: 'none' }}>
+                    <div className="mono" style={{ color: '#9A968A', width: '48px', flex: 'none' }}>
                       {e.time}
                     </div>
-                    <div style={{ fontWeight: 700, width: '210px', flex: 'none' }}>{statusLabel(e.status)}</div>
-                    <div style={{ color: '#8A8578' }}>{e.note}</div>
+                    <div style={{ fontWeight: 700, width: '210px', flex: 'none', color: '#F2F0E9' }}>{statusLabel(e.status)}</div>
+                    <div style={{ color: '#9A968A' }}>{e.note}</div>
                   </div>
                 ))}
               </div>

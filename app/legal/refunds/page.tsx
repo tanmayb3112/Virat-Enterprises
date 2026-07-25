@@ -9,20 +9,20 @@ export const metadata: Metadata = {
 const h2: React.CSSProperties = {
   fontSize: 20,
   fontWeight: 700,
-  color: "#1A1A1A",
+  color: "#F2F0E9",
   marginTop: 32,
   marginBottom: 10,
   letterSpacing: "-0.01em",
 };
 const p: React.CSSProperties = {
   fontSize: 15,
-  color: "#55524A",
+  color: "#C9C6BC",
   lineHeight: 1.7,
   margin: "0 0 12px",
 };
 const ul: React.CSSProperties = {
   fontSize: 15,
-  color: "#55524A",
+  color: "#C9C6BC",
   lineHeight: 1.7,
   margin: "0 0 12px",
   paddingLeft: 20,
@@ -41,7 +41,7 @@ export default function RefundsPage() {
           fontWeight: 700,
           letterSpacing: "0.18em",
           textTransform: "uppercase",
-          color: "#8A8578",
+          color: "#9A968A",
         }}
       >
         Legal
@@ -51,7 +51,7 @@ export default function RefundsPage() {
           fontSize: 40,
           fontWeight: 800,
           letterSpacing: "-0.03em",
-          color: "#1A1A1A",
+          color: "#F2F0E9",
           margin: "12px 0 20px",
           lineHeight: 1.05,
         }}
@@ -59,8 +59,8 @@ export default function RefundsPage() {
         Refund &amp; Cancellation Policy
       </h1>
 
-      <div style={{ borderLeft: "2px solid #8A5A22", paddingLeft: 16, margin: "0 0 28px" }}>
-        <p style={{ fontSize: 14, color: "#8A5A22", lineHeight: 1.6, margin: 0 }}>
+      <div style={{ borderLeft: "2px solid #E8B25C", paddingLeft: 16, margin: "0 0 28px" }}>
+        <p style={{ fontSize: 14, color: "#E8B25C", lineHeight: 1.6, margin: 0 }}>
           Draft for owner review — please have your advisor confirm before publishing.
         </p>
       </div>
@@ -120,8 +120,8 @@ export default function RefundsPage() {
         your order number, or visit the branch that fulfilled your order.
       </p>
 
-      <hr style={{ border: 0, borderTop: "1px solid #E7E4DC", margin: "32px 0 16px" }} />
-      <p className="mono" style={{ fontSize: 12.5, color: "#8A8578", margin: 0 }}>
+      <hr style={{ border: 0, borderTop: "1px solid #2E2E29", margin: "32px 0 16px" }} />
+      <p className="mono" style={{ fontSize: 12.5, color: "#9A968A", margin: 0 }}>
         Last updated: July 2026 · Virat Enterprises, Pune · WhatsApp +91 98231 41366
       </p>
     </div>
