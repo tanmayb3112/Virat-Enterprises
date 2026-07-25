@@ -14,6 +14,8 @@ export interface Branch {
   lng: number | null;
   upiId: string;
   confirmed: boolean; // false = address pending owner confirmation
+  photoUrl?: string; // owner-supplied shop photo (public/branches/<id>.jpg once provided)
+  mapsUrl?: string; // owner-supplied Google Maps share link (preferred over lat/lng search)
 }
 
 // NOTE: Only Mukund Nagar is fully confirmed. The other 5 use documented
