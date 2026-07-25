@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --blue: #1b3a6b;
+  --orange: #f5821f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  color: #1a1a1a;
+  background: #fafaf8;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: #1b3a6b;
+  text-decoration: none;
+}
+a:hover {
+  color: #f5821f;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+input[type="range"] {
+  accent-color: #f5821f;
+}
+
+::selection {
+  background: #f5821f2e;
+}
+
+.mono {
+  font-family: var(--font-plex-mono), monospace;
+}
+
+/* Hover helpers (the prototype uses style-hover; we replicate the exact ones). */
+.h-navlink {
+  color: #6f6b62;
+  transition: color 0.12s;
+}
+.h-navlink:hover {
+  color: #1a1a1a;
+}
+.h-orange:hover {
+  background: #e0741a !important;
+}
+.h-blue:hover {
+  background: #142c51 !important;
+}
+.h-cell:hover {
+  background: #ffffff !important;
+}
+.h-outline:hover {
+  border-color: #1a1a1a !important;
+}
+.h-dash:hover {
+  border-color: #f5821f !important;
+}
+.h-white:hover {
+  background: #f0ede5 !important;
+}
+.h-remove:hover {
+  color: #b23b3b !important;
+}
+.h-ink:hover {
+  color: #1a1a1a !important;
+}
+
+/* One accordion icon rotation transition per the brief. */
+.faq-icon {
+  transition: transform 0.18s;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
