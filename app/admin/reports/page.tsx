@@ -25,14 +25,14 @@ function statusLabel(s: Status): string {
 }
 
 const PILL_MAP: Record<Status, [string, string]> = {
-  RECEIVED: ['#EDF2FA', '#1B3A6B'],
-  PAYMENT_PENDING_VERIFICATION: ['#FBF0E2', '#8A5A22'],
-  PAID: ['#EAF3EC', '#1F6B3E'],
-  PRINTING: ['#EFEAFB', '#5B3FA8'],
-  READY: ['#E8F2F7', '#1B6584'],
-  OUT_FOR_DELIVERY: ['#FBF0E2', '#B4610F'],
-  COMPLETED: ['#EFEEE9', '#6F6B62'],
-  CANCELLED: ['#FAEDED', '#B23B3B'],
+  RECEIVED: ['#1C2836', '#9DC1F0'],
+  PAYMENT_PENDING_VERIFICATION: ['#33270E', '#E8B25C'],
+  PAID: ['#152B1C', '#7ED09A'],
+  PRINTING: ['#241D38', '#C4B1F5'],
+  READY: ['#132831', '#8FD0E8'],
+  OUT_FOR_DELIVERY: ['#33240D', '#F5C173'],
+  COMPLETED: ['#26261F', '#B9B6AC'],
+  CANCELLED: ['#331717', '#F09A9A'],
 };
 function pill(status: Status): CSSProperties {
   const [bg, color] = PILL_MAP[status];
@@ -52,9 +52,9 @@ function smallChip(active: boolean): CSSProperties {
     ? {
         padding: '7px 12px',
         borderRadius: '6px',
-        border: '1px solid #1B3A6B',
-        background: '#1B3A6B',
-        color: '#fff',
+        border: '1px solid #FFC400',
+        background: '#FFC400',
+        color: '#111',
         fontSize: '12px',
         fontWeight: 700,
         cursor: 'pointer',
@@ -63,9 +63,9 @@ function smallChip(active: boolean): CSSProperties {
     : {
         padding: '7px 12px',
         borderRadius: '6px',
-        border: '1px solid #D8D2C4',
-        background: '#fff',
-        color: '#55524A',
+        border: '1px solid #3E3E36',
+        background: '#1C1C18',
+        color: '#F2F0E9',
         fontSize: '12px',
         fontWeight: 600,
         cursor: 'pointer',
@@ -164,8 +164,8 @@ export default function ReportsPage() {
   const metrics: { label: string; value: string; sub: string; color?: string }[] = [
     { label: 'ORDERS', value: String(ordersCount), sub: `${new Set(REPORT_ROWS.map((r) => r.branch)).size} branches` },
     { label: 'BILLED', value: inr(billedTotal), sub: 'all jobs raised' },
-    { label: 'RECEIVED', value: inr(receivedTotal), sub: 'Razorpay + verified UPI', color: '#1F6B3E' },
-    { label: 'GAP', value: inr(gapTotal), sub: `${toChase} orders to chase`, color: '#B23B3B' },
+    { label: 'RECEIVED', value: inr(receivedTotal), sub: 'Razorpay + verified UPI', color: '#6FCF8E' },
+    { label: 'GAP', value: inr(gapTotal), sub: `${toChase} orders to chase`, color: '#F08A8A' },
     { label: 'DELIVERY FEES', value: inr(deliveryFees), sub: 'courier fees paid' },
     { label: 'CANCELLED', value: String(cancelledCount), sub: inr(1560) + ' reversed' },
   ];
@@ -204,7 +204,7 @@ export default function ReportsPage() {
     >
       <style>{`@media(max-width:720px){
         .reports-metric-strip{grid-template-columns:1fr 1fr !important;}
-        .reports-metric-cell{border-bottom:1px solid #F0EDE5;}
+        .reports-metric-cell{border-bottom:1px solid #26261F;}
         .reports-two-col{grid-template-columns:1fr !important;}
       }`}</style>
 
@@ -217,21 +217,21 @@ export default function ReportsPage() {
           justifyContent: 'space-between',
           gap: '24px',
           flexWrap: 'wrap',
-          borderBottom: '1px solid #E7E4DC',
+          borderBottom: '1px solid #2E2E29',
           paddingBottom: '22px',
         }}
       >
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#8A8578' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
             REPORTS
           </div>
-          <h1 style={{ margin: '10px 0 0', fontSize: '34px', fontWeight: 800, letterSpacing: '-.025em' }}>
+          <h1 style={{ margin: '10px 0 0', fontSize: '34px', fontWeight: 800, letterSpacing: '-.025em', color: '#F2F0E9' }}>
             Billed vs received
           </h1>
-          <div style={{ fontSize: '13px', color: '#8A8578', marginTop: '5px' }}>
+          <div style={{ fontSize: '13px', color: '#9A968A', marginTop: '5px' }}>
             Per-branch and all-branch — end-of-day summary emails via cron in production.
           </div>
-          <div style={{ fontSize: '12px', color: '#B0AB9F', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: '#6E6B62', marginTop: '4px' }}>
             Demo data — figures update live once Supabase is configured.
           </div>
         </div>
@@ -242,9 +242,10 @@ export default function ReportsPage() {
             onChange={(e) => setReportDate(e.target.value)}
             style={{
               padding: '9px 12px',
-              border: '1px solid #D8D2C4',
+              border: '1px solid #3E3E36',
               borderRadius: '6px',
-              background: '#fff',
+              background: '#1C1C18',
+              color: '#F2F0E9',
               fontSize: '13px',
             }}
           />
@@ -257,8 +258,8 @@ export default function ReportsPage() {
             className="h-blue"
             onClick={exportCsv}
             style={{
-              background: '#1B3A6B',
-              color: '#fff',
+              background: '#FFC400',
+              color: '#111',
               border: 0,
               borderRadius: '6px',
               padding: '10px 14px',
@@ -280,8 +281,8 @@ export default function ReportsPage() {
           display: 'grid',
           gridTemplateColumns: 'repeat(6,1fr)',
           gap: 0,
-          border: '1px solid #E7E4DC',
-          background: '#fff',
+          border: '1px solid #2E2E29',
+          background: '#1C1C18',
           borderRadius: '8px',
           overflow: 'hidden',
         }}
@@ -290,9 +291,9 @@ export default function ReportsPage() {
           <div
             key={m.label}
             className="reports-metric-cell"
-            style={{ padding: '18px 20px', borderLeft: i === 0 ? '0' : '1px solid #F0EDE5' }}
+            style={{ padding: '18px 20px', borderLeft: i === 0 ? '0' : '1px solid #26261F' }}
           >
-            <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#8A8578' }}>
+            <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#9A968A' }}>
               {m.label}
             </div>
             <div
@@ -301,12 +302,12 @@ export default function ReportsPage() {
                 fontWeight: 800,
                 marginTop: '6px',
                 letterSpacing: '-.02em',
-                color: m.color,
+                color: m.color || '#F2F0E9',
               }}
             >
               {m.value}
             </div>
-            <div style={{ fontSize: '11.5px', color: '#8A8578', marginTop: '2px' }}>{m.sub}</div>
+            <div style={{ fontSize: '11.5px', color: '#9A968A', marginTop: '2px' }}>{m.sub}</div>
           </div>
         ))}
       </div>
@@ -325,16 +326,16 @@ export default function ReportsPage() {
         {/* LEFT: per branch */}
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '10px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#8A8578' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
               PER BRANCH
             </div>
-            <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#8A8578' }}>
+            <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#9A968A' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', background: '#1B3A6B', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', background: '#FFC400', display: 'inline-block' }} />
                 Billed
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', background: '#F5821F', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', background: '#FFFFFF', display: 'inline-block' }} />
                 Received
               </div>
             </div>
@@ -345,7 +346,7 @@ export default function ReportsPage() {
               display: 'flex',
               flexDirection: 'column',
               gap: '18px',
-              borderTop: '1px solid #E7E4DC',
+              borderTop: '1px solid #2E2E29',
               paddingTop: '20px',
             }}
           >
@@ -354,45 +355,45 @@ export default function ReportsPage() {
               return (
                 <div key={b.name}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '13px' }}>
-                    <div style={{ fontWeight: 700 }}>{b.name}</div>
+                    <div style={{ fontWeight: 700, color: '#F2F0E9' }}>{b.name}</div>
                     <div
                       className="mono"
-                      style={{ fontSize: '12px', fontWeight: 700, color: matched ? '#1F6B3E' : '#B23B3B' }}
+                      style={{ fontSize: '12px', fontWeight: 700, color: matched ? '#6FCF8E' : '#F08A8A' }}
                     >
                       {matched ? 'matched' : 'gap ' + inr(b.billed - b.received)}
                     </div>
                   </div>
                   <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ flex: 1, height: '12px', background: '#F0EDE5' }}>
+                      <div style={{ flex: 1, height: '12px', background: '#26261F' }}>
                         <div
                           style={{
                             width: Math.round((b.billed / maxB) * 100) + '%',
                             height: '100%',
-                            background: '#1B3A6B',
+                            background: '#FFC400',
                           }}
                         />
                       </div>
                       <div
                         className="mono"
-                        style={{ width: '80px', textAlign: 'right', fontSize: '12.5px', fontWeight: 700 }}
+                        style={{ width: '80px', textAlign: 'right', fontSize: '12.5px', fontWeight: 700, color: '#F2F0E9' }}
                       >
                         {inr(b.billed)}
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ flex: 1, height: '12px', background: '#F0EDE5' }}>
+                      <div style={{ flex: 1, height: '12px', background: '#26261F' }}>
                         <div
                           style={{
                             width: Math.round((b.received / maxB) * 100) + '%',
                             height: '100%',
-                            background: '#F5821F',
+                            background: '#FFFFFF',
                           }}
                         />
                       </div>
                       <div
                         className="mono"
-                        style={{ width: '80px', textAlign: 'right', fontSize: '12.5px', fontWeight: 700 }}
+                        style={{ width: '80px', textAlign: 'right', fontSize: '12.5px', fontWeight: 700, color: '#F2F0E9' }}
                       >
                         {inr(b.received)}
                       </div>
@@ -406,7 +407,7 @@ export default function ReportsPage() {
 
         {/* RIGHT: top services + mismatches */}
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#8A8578' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
             TOP SERVICES
           </div>
           <div
@@ -415,24 +416,24 @@ export default function ReportsPage() {
               display: 'flex',
               flexDirection: 'column',
               gap: '14px',
-              borderTop: '1px solid #E7E4DC',
+              borderTop: '1px solid #2E2E29',
               paddingTop: '20px',
             }}
           >
             {TOP_SERVICES.map((s, i) => (
               <div key={s.name}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                  <div style={{ fontWeight: 600 }}>{s.name}</div>
-                  <div className="mono" style={{ fontWeight: 700 }}>
+                  <div style={{ fontWeight: 600, color: '#F2F0E9' }}>{s.name}</div>
+                  <div className="mono" style={{ fontWeight: 700, color: '#F2F0E9' }}>
                     {inr(s.amount)}
                   </div>
                 </div>
-                <div style={{ marginTop: '6px', height: '8px', background: '#F0EDE5' }}>
+                <div style={{ marginTop: '6px', height: '8px', background: '#26261F' }}>
                   <div
                     style={{
                       width: Math.round((s.amount / maxSvc) * 100) + '%',
                       height: '100%',
-                      background: i === 0 ? '#1B3A6B' : '#9DAFC9',
+                      background: i === 0 ? '#FFC400' : '#6E6B62',
                     }}
                   />
                 </div>
@@ -440,14 +441,14 @@ export default function ReportsPage() {
             ))}
           </div>
           <div style={{ marginTop: '28px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#8A8578' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
               MISMATCHES TO CHASE
             </div>
             <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {MISMATCHES.map((m) => (
-                <div key={m.title} style={{ borderLeft: '2px solid #B23B3B', paddingLeft: '14px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#B23B3B' }}>{m.title}</div>
-                  <div style={{ fontSize: '12.5px', color: '#55524A', marginTop: '3px', lineHeight: 1.5 }}>
+                <div key={m.title} style={{ borderLeft: '2px solid #F08A8A', paddingLeft: '14px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#F08A8A' }}>{m.title}</div>
+                  <div style={{ fontSize: '12.5px', color: '#C9C6BC', marginTop: '3px', lineHeight: 1.5 }}>
                     {m.body}
                   </div>
                 </div>
@@ -459,7 +460,7 @@ export default function ReportsPage() {
 
       {/* orders table */}
       <div style={{ marginTop: '40px', overflowX: 'auto' }}>
-        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#8A8578' }}>
+        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
           ORDERS — {rangeLabel.toUpperCase()}
         </div>
         <div style={{ marginTop: '16px', minWidth: '1020px' }}>
@@ -469,11 +470,11 @@ export default function ReportsPage() {
               gridTemplateColumns: '64px 190px 140px minmax(220px,1fr) 90px 90px 180px',
               gap: '14px',
               padding: '0 0 10px',
-              borderBottom: '1px solid #1A1A1A',
+              borderBottom: '1px solid #F2F0E9',
               fontSize: '10.5px',
               fontWeight: 700,
               letterSpacing: '.12em',
-              color: '#8A8578',
+              color: '#9A968A',
             }}
           >
             <div>TIME</div>
@@ -492,20 +493,20 @@ export default function ReportsPage() {
                 gridTemplateColumns: '64px 190px 140px minmax(220px,1fr) 90px 90px 180px',
                 gap: '14px',
                 padding: '13px 0',
-                borderBottom: '1px solid #F0EDE5',
+                borderBottom: '1px solid #26261F',
                 fontSize: '13px',
                 alignItems: 'center',
               }}
             >
-              <div className="mono" style={{ color: '#8A8578', fontSize: '12px' }}>
+              <div className="mono" style={{ color: '#C9C6BC', fontSize: '12px' }}>
                 {r.time}
               </div>
-              <div className="mono" style={{ fontSize: '11.5px' }}>
+              <div className="mono" style={{ fontSize: '11.5px', color: '#C9C6BC' }}>
                 {r.no}
               </div>
-              <div>{r.branch}</div>
-              <div style={{ color: '#55524A' }}>{r.job}</div>
-              <div className="mono" style={{ textAlign: 'right', fontWeight: 700, fontSize: '12.5px' }}>
+              <div style={{ color: '#F2F0E9' }}>{r.branch}</div>
+              <div style={{ color: '#C9C6BC' }}>{r.job}</div>
+              <div className="mono" style={{ textAlign: 'right', fontWeight: 700, fontSize: '12.5px', color: '#F2F0E9' }}>
                 {inr(r.billed)}
               </div>
               <div
@@ -514,7 +515,7 @@ export default function ReportsPage() {
                   textAlign: 'right',
                   fontWeight: 700,
                   fontSize: '12.5px',
-                  color: r.received ? '#1F6B3E' : '#B23B3B',
+                  color: r.received ? '#6FCF8E' : '#F08A8A',
                 }}
               >
                 {r.received ? inr(r.received) : '—'}

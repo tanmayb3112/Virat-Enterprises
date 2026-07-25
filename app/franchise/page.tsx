@@ -23,7 +23,7 @@ const KICKER: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 700,
   letterSpacing: ".2em",
-  color: "#8A8578",
+  color: "#9A968A",
 };
 
 const budgetChips = [
@@ -165,9 +165,9 @@ export default function FranchisePage() {
       ? {
           padding: "9px 15px",
           borderRadius: 6,
-          border: "1px solid #F5821F",
-          background: "#F5821F",
-          color: "#fff",
+          border: "1px solid #111",
+          background: "#111",
+          color: "#FFC400",
           fontSize: 13,
           fontWeight: 700,
           cursor: "pointer",
@@ -176,9 +176,9 @@ export default function FranchisePage() {
       : {
           padding: "9px 15px",
           borderRadius: 6,
-          border: "1px solid #ffffff3d",
+          border: "1px solid #00000066",
           background: "transparent",
-          color: "#fff",
+          color: "#111",
           fontSize: 13,
           fontWeight: 600,
           cursor: "pointer",
@@ -190,9 +190,9 @@ export default function FranchisePage() {
       ? {
           padding: "7px 12px",
           borderRadius: 6,
-          border: "1px solid #1B3A6B",
-          background: "#1B3A6B",
-          color: "#fff",
+          border: "1px solid #FFC400",
+          background: "#FFC400",
+          color: "#111",
           fontSize: 12,
           fontWeight: 700,
           cursor: "pointer",
@@ -201,9 +201,9 @@ export default function FranchisePage() {
       : {
           padding: "7px 12px",
           borderRadius: 6,
-          border: "1px solid #D8D2C4",
-          background: "#fff",
-          color: "#55524A",
+          border: "1px solid #3E3E36",
+          background: "#1C1C18",
+          color: "#F2F0E9",
           fontSize: 12,
           fontWeight: 600,
           cursor: "pointer",
@@ -212,9 +212,10 @@ export default function FranchisePage() {
 
   const inputStyle: React.CSSProperties = {
     padding: "11px 13px",
-    border: "1px solid #D8D2C4",
+    border: "1px solid #3E3E36",
     borderRadius: 6,
-    background: "#fff",
+    background: "#1C1C18",
+    color: "#F2F0E9",
     fontSize: 14,
   };
 
@@ -248,14 +249,14 @@ export default function FranchisePage() {
           }}
         >
           Own a Virat Enterprises franchise
-          <span style={{ color: "#F5821F" }}>.</span>
+          <span style={{ color: "#FFC400" }}>.</span>
         </h1>
         <p
           style={{
             margin: "24px 0 0",
             fontSize: 17,
             lineHeight: 1.6,
-            color: "#55524A",
+            color: "#C9C6BC",
             maxWidth: 560,
           }}
         >
@@ -267,8 +268,8 @@ export default function FranchisePage() {
             onClick={() => scrollTo("roi")}
             className="h-orange"
             style={{
-              background: "#F5821F",
-              color: "#fff",
+              background: "#FFC400",
+              color: "#111",
               border: 0,
               borderRadius: 6,
               padding: "16px 28px",
@@ -284,8 +285,8 @@ export default function FranchisePage() {
             className="h-outline"
             style={{
               background: "none",
-              color: "#1A1A1A",
-              border: "1px solid #C9C4B8",
+              color: "#F2F0E9",
+              border: "1px solid #57544B",
               borderRadius: 6,
               padding: "16px 24px",
               fontSize: 15,
@@ -302,7 +303,7 @@ export default function FranchisePage() {
             marginTop: 56,
             display: "grid",
             gridTemplateColumns: "repeat(4,1fr)",
-            borderTop: "1px solid #E7E4DC",
+            borderTop: "1px solid #2E2E29",
           }}
         >
           {[
@@ -315,13 +316,13 @@ export default function FranchisePage() {
               key={i}
               style={{
                 padding: i === 0 ? "20px 32px 0 0" : "20px 32px 0",
-                borderLeft: i === 0 ? undefined : "1px solid #E7E4DC",
+                borderLeft: i === 0 ? undefined : "1px solid #2E2E29",
               }}
             >
               <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em" }}>
                 {s.n}
               </div>
-              <div style={{ fontSize: 12.5, color: "#8A8578", marginTop: 3 }}>
+              <div style={{ fontSize: 12.5, color: "#9A968A", marginTop: 3 }}>
                 {s.l}
               </div>
             </div>
@@ -330,7 +331,7 @@ export default function FranchisePage() {
       </div>
 
       {/* ============ 2. ABOUT ============ */}
-      <div style={{ borderTop: "1px solid #E7E4DC", borderBottom: "1px solid #E7E4DC", background: "#fff" }}>
+      <div style={{ borderTop: "1px solid #2E2E29", borderBottom: "1px solid #2E2E29", background: "#1C1C18" }}>
         <div
           className="fr-2col"
           style={{
@@ -359,7 +360,7 @@ export default function FranchisePage() {
             <p
               style={{
                 fontSize: 15,
-                color: "#55524A",
+                color: "#C9C6BC",
                 lineHeight: 1.7,
                 margin: 0,
               }}
@@ -373,12 +374,12 @@ export default function FranchisePage() {
                 <div
                   key={t}
                   style={{
-                    border: "1px solid #D8D2C4",
+                    border: "1px solid #3E3E36",
                     borderRadius: 6,
                     padding: "7px 11px",
                     fontSize: 12.5,
                     fontWeight: 600,
-                    color: "#55524A",
+                    color: "#F2F0E9",
                   }}
                 >
                   {t}
@@ -388,7 +389,7 @@ export default function FranchisePage() {
             <div
               style={{
                 marginTop: 22,
-                borderLeft: "2px solid #1B3A6B",
+                borderLeft: "2px solid #FFC400",
                 paddingLeft: 16,
               }}
             >
@@ -398,7 +399,7 @@ export default function FranchisePage() {
               <div
                 style={{
                   fontSize: 13.5,
-                  color: "#55524A",
+                  color: "#C9C6BC",
                   marginTop: 4,
                   lineHeight: 1.6,
                 }}
@@ -413,7 +414,7 @@ export default function FranchisePage() {
       </div>
 
       {/* ============ 3. INVESTMENT ============ */}
-      <div style={{ borderTop: "1px solid #E7E4DC" }}>
+      <div style={{ borderTop: "1px solid #2E2E29" }}>
         <div style={{ maxWidth: 1240, margin: "0 auto", padding: "64px 32px" }}>
           <div
             style={{
@@ -437,7 +438,7 @@ export default function FranchisePage() {
                 Starts from ₹10 lakh
               </div>
             </div>
-            <div style={{ fontSize: 13.5, color: "#8A8578" }}>
+            <div style={{ fontSize: 13.5, color: "#9A968A" }}>
               Includes ₹2 lakh franchise fee.
             </div>
           </div>
@@ -456,9 +457,9 @@ export default function FranchisePage() {
                 <div
                   key={t.key}
                   style={{
-                    background: "#fff",
-                    border: "1px solid " + (on ? "#1B3A6B" : "#E7E4DC"),
-                    boxShadow: on ? "0 0 0 1px #1B3A6B" : "none",
+                    background: "#1C1C18",
+                    border: "1px solid " + (on ? "#FFC400" : "#2E2E29"),
+                    boxShadow: on ? "0 0 0 1px #FFC400" : "none",
                     borderRadius: 8,
                     padding: 24,
                   }}
@@ -477,7 +478,7 @@ export default function FranchisePage() {
                           fontSize: 10.5,
                           fontWeight: 800,
                           letterSpacing: ".1em",
-                          color: "#F5821F",
+                          color: "#FFC400",
                         }}
                       >
                         {t.tag}
@@ -494,7 +495,7 @@ export default function FranchisePage() {
                   >
                     {t.totalLabel}
                   </div>
-                  <div style={{ fontSize: 12.5, marginTop: 3, color: "#8A8578" }}>
+                  <div style={{ fontSize: 12.5, marginTop: 3, color: "#9A968A" }}>
                     Includes ₹2 lakh franchise fee
                   </div>
                   <div
@@ -503,7 +504,7 @@ export default function FranchisePage() {
                       display: "flex",
                       flexDirection: "column",
                       gap: 8,
-                      borderTop: "1px solid #F0EDE5",
+                      borderTop: "1px solid #26261F",
                       paddingTop: 14,
                       minHeight: 118,
                     }}
@@ -511,7 +512,7 @@ export default function FranchisePage() {
                     {t.bullets.map((p, i) => (
                       <div
                         key={i}
-                        style={{ fontSize: 13, lineHeight: 1.5, color: "#55524A" }}
+                        style={{ fontSize: 13, lineHeight: 1.5, color: "#C9C6BC" }}
                       >
                         {p}
                       </div>
@@ -526,14 +527,14 @@ export default function FranchisePage() {
                     style={{
                       marginTop: 16,
                       width: "100%",
-                      border: on ? 0 : "1px solid #D8D2C4",
+                      border: on ? 0 : "1px solid #57544B",
                       borderRadius: 6,
                       padding: 11,
                       fontSize: 13,
                       fontWeight: 700,
                       cursor: "pointer",
-                      background: on ? "#1B3A6B" : "#fff",
-                      color: on ? "#fff" : "#1B3A6B",
+                      background: on ? "#FFC400" : "#1C1C18",
+                      color: on ? "#111" : "#F2F0E9",
                     }}
                   >
                     {on ? "Selected in calculator ✓" : "Use in ROI calculator"}
@@ -546,7 +547,7 @@ export default function FranchisePage() {
       </div>
 
       {/* ============ 4. INCLUSIONS ============ */}
-      <div style={{ borderTop: "1px solid #E7E4DC", background: "#fff" }}>
+      <div style={{ borderTop: "1px solid #2E2E29", background: "#1C1C18" }}>
         <div style={{ maxWidth: 1240, margin: "0 auto", padding: "64px 32px" }}>
           <div style={KICKER}>WHAT&apos;S INCLUDED</div>
           <div
@@ -559,7 +560,7 @@ export default function FranchisePage() {
             }}
           >
             {INCLUSIONS.map((i) => (
-              <div key={i} style={{ borderTop: "1px solid #E7E4DC", paddingTop: 14 }}>
+              <div key={i} style={{ borderTop: "1px solid #2E2E29", paddingTop: 14 }}>
                 <div
                   style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-.01em" }}
                 >
@@ -568,7 +569,7 @@ export default function FranchisePage() {
                 <div
                   style={{
                     fontSize: 12.5,
-                    color: "#8A8578",
+                    color: "#9A968A",
                     marginTop: 6,
                     lineHeight: 1.55,
                   }}
@@ -582,8 +583,8 @@ export default function FranchisePage() {
             style={{
               marginTop: 28,
               fontSize: 13,
-              color: "#8A5A22",
-              borderLeft: "2px solid #F5821F",
+              color: "#E8B25C",
+              borderLeft: "2px solid #FFC400",
               paddingLeft: 14,
               lineHeight: 1.6,
             }}
@@ -595,7 +596,7 @@ export default function FranchisePage() {
       </div>
 
       {/* ============ 5. STEPS ============ */}
-      <div style={{ borderTop: "1px solid #E7E4DC" }}>
+      <div style={{ borderTop: "1px solid #2E2E29" }}>
         <div style={{ maxWidth: 1240, margin: "0 auto", padding: "64px 32px" }}>
           <div style={KICKER}>HOW TO GET A FRANCHISE</div>
           <div
@@ -604,7 +605,7 @@ export default function FranchisePage() {
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))",
               gap: 0,
-              borderTop: "1px solid #E7E4DC",
+              borderTop: "1px solid #2E2E29",
             }}
           >
             {FRANCHISE_STEPS.map((s, i) => (
@@ -615,13 +616,13 @@ export default function FranchisePage() {
                   borderRight:
                     i === FRANCHISE_STEPS.length - 1
                       ? undefined
-                      : "1px solid #E7E4DC",
+                      : "1px solid #2E2E29",
                   marginRight: i === FRANCHISE_STEPS.length - 1 ? 0 : 20,
                 }}
               >
                 <div
                   className="mono"
-                  style={{ fontSize: 13, fontWeight: 800, color: "#F5821F" }}
+                  style={{ fontSize: 13, fontWeight: 800, color: "#FFC400" }}
                 >
                   {s.n}
                 </div>
@@ -638,7 +639,7 @@ export default function FranchisePage() {
                 <div
                   style={{
                     fontSize: 12,
-                    color: "#55524A",
+                    color: "#C9C6BC",
                     marginTop: 5,
                     lineHeight: 1.5,
                   }}
@@ -652,7 +653,7 @@ export default function FranchisePage() {
       </div>
 
       {/* ============ 6. ROI CALCULATOR ============ */}
-      <div id="roi" style={{ background: "#1B3A6B", color: "#fff" }}>
+      <div id="roi" style={{ background: "#FFC400", color: "#111" }}>
         <div
           className="fr-2col"
           style={{
@@ -672,7 +673,7 @@ export default function FranchisePage() {
                 fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: ".2em",
-                color: "#F5821F",
+                color: "#111",
               }}
             >
               ROI CALCULATOR
@@ -695,7 +696,7 @@ export default function FranchisePage() {
                 fontSize: 11,
                 fontWeight: 700,
                 letterSpacing: ".16em",
-                color: "#8FA3C2",
+                color: "#111",
               }}
             >
               INVESTMENT TIER
@@ -726,7 +727,7 @@ export default function FranchisePage() {
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: ".16em",
-                  color: "#8FA3C2",
+                  color: "#111",
                 }}
               >
                 EXPECTED MONTHLY SALE
@@ -742,7 +743,7 @@ export default function FranchisePage() {
               step={A.stepMonthlySale}
               value={sale}
               onChange={(e) => setSale(parseInt(e.target.value, 10))}
-              style={{ width: "100%", marginTop: 12, accentColor: "#F5821F" }}
+              style={{ width: "100%", marginTop: 12, accentColor: "#111" }}
             />
 
             {/* Gross margin */}
@@ -759,7 +760,7 @@ export default function FranchisePage() {
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: ".16em",
-                  color: "#8FA3C2",
+                  color: "#111",
                 }}
               >
                 GROSS MARGIN
@@ -775,7 +776,7 @@ export default function FranchisePage() {
               step={1}
               value={gross}
               onChange={(e) => setGross(parseInt(e.target.value, 10))}
-              style={{ width: "100%", marginTop: 12, accentColor: "#F5821F" }}
+              style={{ width: "100%", marginTop: 12, accentColor: "#111" }}
             />
 
             {/* Net margin */}
@@ -792,7 +793,7 @@ export default function FranchisePage() {
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: ".16em",
-                  color: "#8FA3C2",
+                  color: "#111",
                 }}
               >
                 NET MARGIN (after rent, staff, power)
@@ -808,14 +809,14 @@ export default function FranchisePage() {
               step={1}
               value={net}
               onChange={(e) => setNet(parseInt(e.target.value, 10))}
-              style={{ width: "100%", marginTop: 12, accentColor: "#F5821F" }}
+              style={{ width: "100%", marginTop: 12, accentColor: "#111" }}
             />
 
             <div
               style={{
                 marginTop: 20,
                 fontSize: 11.5,
-                color: "#B7C5DB",
+                color: "#4A3E00",
                 lineHeight: 1.6,
               }}
             >
@@ -831,19 +832,19 @@ export default function FranchisePage() {
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 gap: 0,
-                border: "1px solid #ffffff3d",
+                border: "1px solid #00000042",
                 borderRadius: 8,
                 overflow: "hidden",
               }}
               className="fr-roi-results"
             >
               <div
-                style={{ padding: "20px 22px", borderRight: "1px solid #ffffff3d" }}
+                style={{ padding: "20px 22px", borderRight: "1px solid #00000042" }}
               >
                 <div
                   style={{
                     fontSize: 11,
-                    color: "#8FA3C2",
+                    color: "#111",
                     fontWeight: 700,
                     letterSpacing: ".1em",
                   }}
@@ -865,7 +866,7 @@ export default function FranchisePage() {
                 <div
                   style={{
                     fontSize: 11,
-                    color: "#8FA3C2",
+                    color: "#111",
                     fontWeight: 700,
                     letterSpacing: ".1em",
                   }}
@@ -886,7 +887,7 @@ export default function FranchisePage() {
               <div
                 style={{
                   padding: "20px 22px",
-                  borderTop: "1px solid #ffffff3d",
+                  borderTop: "1px solid #00000042",
                   gridColumn: "span 2",
                   display: "flex",
                   justifyContent: "space-between",
@@ -897,7 +898,7 @@ export default function FranchisePage() {
                   <div
                     style={{
                       fontSize: 11,
-                      color: "#8FA3C2",
+                      color: "#111",
                       fontWeight: 700,
                       letterSpacing: ".1em",
                     }}
@@ -910,13 +911,13 @@ export default function FranchisePage() {
                       fontWeight: 800,
                       marginTop: 4,
                       letterSpacing: "-.02em",
-                      color: "#F5821F",
+                      color: "#111",
                     }}
                   >
                     {payback} mo
                   </div>
                 </div>
-                <div style={{ fontSize: 12.5, color: "#8FA3C2" }}>
+                <div style={{ fontSize: 12.5, color: "#111" }}>
                   on {tierLabelSelected}
                 </div>
               </div>
@@ -929,7 +930,7 @@ export default function FranchisePage() {
                 fontSize: 11,
                 fontWeight: 700,
                 letterSpacing: ".16em",
-                color: "#8FA3C2",
+                color: "#111",
               }}
             >
               3-YEAR CUMULATIVE NET PROFIT VS INVESTMENT
@@ -941,7 +942,7 @@ export default function FranchisePage() {
                 alignItems: "flex-end",
                 gap: 20,
                 height: 180,
-                borderBottom: "1px solid #ffffff3d",
+                borderBottom: "1px solid #00000042",
                 position: "relative",
               }}
             >
@@ -952,7 +953,7 @@ export default function FranchisePage() {
                   left: 0,
                   right: 0,
                   bottom: Math.round((tier / maxY) * 100) + "%",
-                  borderTop: "1px dashed #8FA3C2",
+                  borderTop: "1px dashed #111",
                   zIndex: 0,
                 }}
               >
@@ -963,7 +964,7 @@ export default function FranchisePage() {
                     right: 0,
                     top: -16,
                     fontSize: 10.5,
-                    color: "#8FA3C2",
+                    color: "#111",
                   }}
                 >
                   Investment {tierLabelSelected}
@@ -989,9 +990,9 @@ export default function FranchisePage() {
                       style={{
                         height:
                           Math.max(4, Math.round((cum / maxY) * 100)) + "%",
-                        background: reached ? "#F5821F" : "#ffffff40",
+                        background: reached ? "#111" : "#00000040",
                         borderTop:
-                          "2px solid " + (reached ? "#F5821F" : "#ffffff66"),
+                          "2px solid " + (reached ? "#111" : "#00000066"),
                       }}
                     />
                   </div>
@@ -1001,7 +1002,7 @@ export default function FranchisePage() {
             <div style={{ display: "flex", gap: 20, marginTop: 8 }}>
               {cumulative.map((cum, i) => (
                 <div key={i} style={{ flex: 1, textAlign: "center" }}>
-                  <div style={{ fontSize: 11.5, color: "#8FA3C2" }}>
+                  <div style={{ fontSize: 11.5, color: "#111" }}>
                     Y{i + 1}
                   </div>
                   <div
@@ -1018,7 +1019,7 @@ export default function FranchisePage() {
       </div>
 
       {/* ============ 7. LEAD FORM ============ */}
-      <div id="lead" style={{ background: "#fff", borderTop: "1px solid #E7E4DC" }}>
+      <div id="lead" style={{ background: "#1C1C18", borderTop: "1px solid #2E2E29" }}>
         <div
           className="fr-2col"
           style={{
@@ -1045,7 +1046,7 @@ export default function FranchisePage() {
             <div
               style={{
                 fontSize: 14,
-                color: "#55524A",
+                color: "#C9C6BC",
                 marginTop: 12,
                 lineHeight: 1.65,
                 maxWidth: 340,
@@ -1058,14 +1059,14 @@ export default function FranchisePage() {
 
           <div>
             {submitted ? (
-              <div style={{ borderLeft: "2px solid #1F6B3E", paddingLeft: 18 }}>
-                <div style={{ fontSize: 19, fontWeight: 800, color: "#1F6B3E" }}>
+              <div style={{ borderLeft: "2px solid #6FCF8E", paddingLeft: 18 }}>
+                <div style={{ fontSize: 19, fontWeight: 800, color: "#6FCF8E" }}>
                   Thanks — we&apos;ll call you shortly.
                 </div>
                 <div
                   style={{
                     fontSize: 13.5,
-                    color: "#55524A",
+                    color: "#C9C6BC",
                     marginTop: 8,
                     lineHeight: 1.6,
                   }}
@@ -1091,8 +1092,8 @@ export default function FranchisePage() {
                     rel="noreferrer"
                     className="h-blue"
                     style={{
-                      background: "#1F6B3E",
-                      color: "#fff",
+                      background: "#6FCF8E",
+                      color: "#111",
                       fontSize: 13.5,
                       fontWeight: 700,
                       padding: "11px 16px",
@@ -1126,7 +1127,7 @@ export default function FranchisePage() {
                         style={{
                           marginTop: 6,
                           fontSize: 13,
-                          color: "#B23B3B",
+                          color: "#F08A8A",
                           fontWeight: 600,
                         }}
                       >
@@ -1147,7 +1148,7 @@ export default function FranchisePage() {
                         style={{
                           marginTop: 6,
                           fontSize: 13,
-                          color: "#B23B3B",
+                          color: "#F08A8A",
                           fontWeight: 600,
                         }}
                       >
@@ -1185,7 +1186,7 @@ export default function FranchisePage() {
                         fontSize: 11,
                         fontWeight: 700,
                         letterSpacing: ".16em",
-                        color: "#8A8578",
+                        color: "#9A968A",
                       }}
                     >
                       INVESTMENT BUDGET
@@ -1215,7 +1216,7 @@ export default function FranchisePage() {
                         fontSize: 11,
                         fontWeight: 700,
                         letterSpacing: ".16em",
-                        color: "#8A8578",
+                        color: "#9A968A",
                       }}
                     >
                       OWN A SHOP SPACE?
@@ -1243,9 +1244,10 @@ export default function FranchisePage() {
                     marginTop: 16,
                     width: "100%",
                     padding: "11px 13px",
-                    border: "1px solid #D8D2C4",
+                    border: "1px solid #3E3E36",
                     borderRadius: 6,
-                    background: "#fff",
+                    background: "#1C1C18",
+                    color: "#F2F0E9",
                     resize: "vertical",
                     fontSize: 14,
                   }}
@@ -1256,8 +1258,8 @@ export default function FranchisePage() {
                   className="h-orange"
                   style={{
                     marginTop: 16,
-                    background: "#F5821F",
-                    color: "#fff",
+                    background: "#FFC400",
+                    color: "#111",
                     border: 0,
                     borderRadius: 6,
                     padding: "15px 26px",
@@ -1275,7 +1277,7 @@ export default function FranchisePage() {
       </div>
 
       {/* ============ 8. FAQ ============ */}
-      <div style={{ borderTop: "1px solid #E7E4DC" }}>
+      <div style={{ borderTop: "1px solid #2E2E29" }}>
         <div
           className="fr-2col"
           style={{
@@ -1304,7 +1306,7 @@ export default function FranchisePage() {
             {FAQS.map((f, i) => {
               const open = faqOpen === i;
               return (
-                <div key={i} style={{ borderBottom: "1px solid #E7E4DC" }}>
+                <div key={i} style={{ borderBottom: "1px solid #2E2E29" }}>
                   <button
                     onClick={() => setFaqOpen(open ? -1 : i)}
                     style={{
@@ -1334,7 +1336,7 @@ export default function FranchisePage() {
                       className="faq-icon"
                       style={{
                         fontSize: 20,
-                        color: "#F5821F",
+                        color: "#FFC400",
                         fontWeight: 600,
                         transform: open ? "rotate(45deg)" : "none",
                         flex: "none",
@@ -1349,7 +1351,7 @@ export default function FranchisePage() {
                       style={{
                         padding: "0 40px 20px 0",
                         fontSize: 13.5,
-                        color: "#55524A",
+                        color: "#C9C6BC",
                         lineHeight: 1.7,
                       }}
                     >
@@ -1364,7 +1366,7 @@ export default function FranchisePage() {
       </div>
 
       {/* Final CTA */}
-      <div style={{ borderTop: "1px solid #E7E4DC" }}>
+      <div style={{ borderTop: "1px solid #2E2E29" }}>
         <div
           style={{
             maxWidth: 1240,
@@ -1391,8 +1393,8 @@ export default function FranchisePage() {
             onClick={() => scrollTo("lead")}
             className="h-orange"
             style={{
-              background: "#F5821F",
-              color: "#fff",
+              background: "#FFC400",
+              color: "#111",
               border: 0,
               borderRadius: 6,
               padding: "16px 28px",

@@ -9,20 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "#FAFAF8",
-        surface: "#FFFFFF",
-        ink: "#1A1A1A",
-        blue: { DEFAULT: "#1B3A6B", hover: "#142C51" },
-        orange: { DEFAULT: "#F5821F", hover: "#E0741A" },
-        body: "#55524A",
-        label: "#8A8578",
-        hint: "#B0AB9F",
-        hair: "#E7E4DC",
-        rowrule: "#F0EDE5",
-        inputborder: "#D8D2C4",
-        good: "#1F6B3E",
-        bad: "#B23B3B",
-        amber: "#8A5A22",
+        bg: "#121210",
+        surface: "#1C1C18",
+        ink: "#F2F0E9",
+        // Key names kept ("blue"/"orange") to avoid breaking existing classes;
+        // both now resolve to the yellow accent per docs/THEME_DARK.md.
+        blue: { DEFAULT: "#FFC400", hover: "#E6B000" },
+        orange: { DEFAULT: "#FFC400", hover: "#E6B000" },
+        body: "#C9C6BC",
+        label: "#9A968A",
+        hint: "#6E6B62",
+        hair: "#2E2E29",
+        rowrule: "#26261F",
+        inputborder: "#3E3E36",
+        good: "#6FCF8E",
+        bad: "#F08A8A",
+        amber: "#E8B25C",
       },
       fontFamily: {
         sans: ["var(--font-jakarta)", "system-ui", "sans-serif"],

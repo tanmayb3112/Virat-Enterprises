@@ -59,7 +59,7 @@ export default function OrderTrackerPage() {
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "56px 20px 96px" }}>
-      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".2em", color: "#8A8578" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".2em", color: "#9A968A" }}>
         TRACK YOUR ORDER
       </div>
       <h1 style={{ margin: "12px 0 0", fontSize: 40, fontWeight: 800, letterSpacing: "-.025em" }}>
@@ -69,9 +69,9 @@ export default function OrderTrackerPage() {
       <div
         style={{
           marginTop: 24,
-          border: "1px solid #E7E4DC",
+          border: "1px solid #2E2E29",
           borderRadius: 8,
-          background: "#fff",
+          background: "#1C1C18",
           padding: "18px 22px",
           display: "flex",
           justifyContent: "space-between",
@@ -81,24 +81,24 @@ export default function OrderTrackerPage() {
         }}
       >
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".16em", color: "#8A8578" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".16em", color: "#9A968A" }}>
             {state === "live" ? "ORDER NUMBER" : "TRACKING TOKEN"}
           </div>
-          <div className="mono" style={{ fontSize: 17, fontWeight: 600, marginTop: 4, wordBreak: "break-all" }}>
+          <div className="mono" style={{ fontSize: 17, fontWeight: 600, marginTop: 4, wordBreak: "break-all", color: "#F2F0E9" }}>
             {order?.order_no ?? token}
           </div>
         </div>
         {order ? (
-          <div style={{ fontSize: 26, fontWeight: 800, color: "#1B3A6B" }}>{inr(order.total)}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#FFC400" }}>{inr(order.total)}</div>
         ) : null}
       </div>
 
       {state === "loading" && (
-        <div style={{ marginTop: 28, fontSize: 14, color: "#8A8578" }}>Checking status…</div>
+        <div style={{ marginTop: 28, fontSize: 14, color: "#9A968A" }}>Checking status…</div>
       )}
 
       {state === "live" && order && !cancelled && (
-        <div style={{ marginTop: 28, borderTop: "1px solid #E7E4DC", paddingTop: 22 }}>
+        <div style={{ marginTop: 28, borderTop: "1px solid #2E2E29", paddingTop: 22 }}>
           {STEPS.map((s, i) => {
             const done = i <= currentIdx;
             const last = i === STEPS.length - 1;
@@ -110,13 +110,13 @@ export default function OrderTrackerPage() {
                       width: 12,
                       height: 12,
                       borderRadius: "50%",
-                      background: done ? "#1F6B3E" : "#fff",
-                      border: done ? "none" : "1px solid #D8D2C4",
+                      background: done ? "#6FCF8E" : "#1C1C18",
+                      border: done ? "none" : "1px solid #3E3E36",
                     }}
                   />
-                  {!last && <div style={{ width: 2, height: 26, background: done ? "#1F6B3E" : "#E7E4DC" }} />}
+                  {!last && <div style={{ width: 2, height: 26, background: done ? "#6FCF8E" : "#2E2E29" }} />}
                 </div>
-                <div style={{ paddingBottom: 14, fontSize: 14, fontWeight: done ? 700 : 500, color: done ? "#1A1A1A" : "#B0AB9F" }}>
+                <div style={{ paddingBottom: 14, fontSize: 14, fontWeight: done ? 700 : 500, color: done ? "#F2F0E9" : "#6E6B62" }}>
                   {s.label}
                 </div>
               </div>
@@ -126,20 +126,20 @@ export default function OrderTrackerPage() {
       )}
 
       {state === "live" && cancelled && (
-        <div style={{ marginTop: 28, borderLeft: "2px solid #B23B3B", paddingLeft: 16 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#B23B3B" }}>This order was cancelled.</div>
-          <div style={{ fontSize: 13.5, color: "#55524A", marginTop: 6, lineHeight: 1.6 }}>
+        <div style={{ marginTop: 28, borderLeft: "2px solid #F08A8A", paddingLeft: 16 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#F08A8A" }}>This order was cancelled.</div>
+          <div style={{ fontSize: 13.5, color: "#C9C6BC", marginTop: 6, lineHeight: 1.6 }}>
             If a payment was made, the refund is being processed. Questions? Message the shop on WhatsApp.
           </div>
         </div>
       )}
 
       {state === "demo" && (
-        <div style={{ marginTop: 28, borderLeft: "2px solid #8A5A22", paddingLeft: 16 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#8A5A22" }}>
+        <div style={{ marginTop: 28, borderLeft: "2px solid #E8B25C", paddingLeft: 16 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#E8B25C" }}>
             Live tracking isn&rsquo;t connected yet.
           </div>
-          <div style={{ fontSize: 13.5, color: "#55524A", marginTop: 6, lineHeight: 1.6, maxWidth: 480 }}>
+          <div style={{ fontSize: 13.5, color: "#C9C6BC", marginTop: 6, lineHeight: 1.6, maxWidth: 480 }}>
             This shop currently confirms order status on WhatsApp. Message us with your order number and
             we&rsquo;ll reply with the latest update — live tracking on this page activates once the shop&rsquo;s
             backend is connected.
@@ -155,14 +155,14 @@ export default function OrderTrackerPage() {
           target="_blank"
           rel="noreferrer"
           className="h-blue"
-          style={{ background: "#1B3A6B", color: "#fff", borderRadius: 6, padding: "13px 20px", fontSize: 14, fontWeight: 700 }}
+          style={{ background: "#FFC400", color: "#111", borderRadius: 6, padding: "13px 20px", fontSize: 14, fontWeight: 700 }}
         >
           Ask on WhatsApp
         </a>
         <Link
           href="/order"
           className="h-outline"
-          style={{ border: "1px solid #C9C4B8", borderRadius: 6, padding: "13px 20px", fontSize: 14, fontWeight: 600, color: "#1A1A1A" }}
+          style={{ border: "1px solid #57544B", borderRadius: 6, padding: "13px 20px", fontSize: 14, fontWeight: 600, color: "#F2F0E9" }}
         >
           New order
         </Link>

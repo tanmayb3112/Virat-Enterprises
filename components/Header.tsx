@@ -22,8 +22,8 @@ export default function Header() {
         position: "sticky",
         top: 0,
         zIndex: 40,
-        background: "#FAFAF8",
-        borderBottom: "1px solid #E7E4DC",
+        background: "#121210",
+        borderBottom: "1px solid #2E2E29",
       }}
     >
       <div
@@ -38,6 +38,7 @@ export default function Header() {
           minWidth: 0,
         }}
       >
+        {/* LOGO: replace with owner shop-board image when provided */}
         <Link
           href="/"
           style={{
@@ -46,7 +47,7 @@ export default function Header() {
             fontSize: 14,
             whiteSpace: "nowrap",
             flex: "none",
-            color: "#1A1A1A",
+            color: "#F2F0E9",
           }}
         >
           VIRAT ENTERPRISES
@@ -71,7 +72,7 @@ export default function Header() {
                   fontWeight: 600,
                   position: "relative",
                   whiteSpace: "nowrap",
-                  color: active ? "#1A1A1A" : undefined,
+                  color: active ? "#F2F0E9" : undefined,
                 }}
               >
                 {n.label}
@@ -83,7 +84,7 @@ export default function Header() {
                       right: 0,
                       bottom: -1,
                       height: 2,
-                      background: "#1B3A6B",
+                      background: "#FFC400",
                     }}
                   />
                 )}
@@ -106,7 +107,7 @@ export default function Header() {
             className="mono hidden sm:block"
             style={{
               fontSize: 11,
-              color: "#B0AB9F",
+              color: "#6E6B62",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -120,7 +121,7 @@ export default function Header() {
             target="_blank"
             rel="noreferrer"
             className="hidden sm:block"
-            style={{ fontSize: 13, fontWeight: 600, color: "#1B3A6B", whiteSpace: "nowrap", flex: "none" }}
+            style={{ fontSize: 13, fontWeight: 600, color: "#FFC400", whiteSpace: "nowrap", flex: "none" }}
           >
             WhatsApp
           </a>
@@ -128,8 +129,8 @@ export default function Header() {
             href="/order"
             className="h-blue"
             style={{
-              background: "#1B3A6B",
-              color: "#fff",
+              background: "#FFC400",
+              color: "#111",
               borderRadius: 6,
               padding: "10px 18px",
               fontSize: 13.5,
@@ -146,16 +147,16 @@ export default function Header() {
             className="ve-burger"
             style={{
               background: "none",
-              border: "1px solid #D8D2C4",
+              border: "1px solid #3E3E36",
               borderRadius: 6,
               padding: "8px 10px",
               cursor: "pointer",
               flex: "none",
             }}
           >
-            <span style={{ display: "block", width: 16, height: 2, background: "#1A1A1A", transform: open ? "translateY(6px) rotate(45deg)" : "none", transition: "transform .15s" }} />
-            <span style={{ display: "block", width: 16, height: 2, background: "#1A1A1A", opacity: open ? 0 : 1, transition: "opacity .15s" }} />
-            <span style={{ display: "block", width: 16, height: 2, background: "#1A1A1A", transform: open ? "translateY(-6px) rotate(-45deg)" : "none", transition: "transform .15s" }} />
+            <span style={{ display: "block", width: 16, height: 2, background: "#F2F0E9", transform: open ? "translateY(6px) rotate(45deg)" : "none", transition: "transform .15s" }} />
+            <span style={{ display: "block", width: 16, height: 2, background: "#F2F0E9", opacity: open ? 0 : 1, transition: "opacity .15s" }} />
+            <span style={{ display: "block", width: 16, height: 2, background: "#F2F0E9", transform: open ? "translateY(-6px) rotate(-45deg)" : "none", transition: "transform .15s" }} />
           </button>
         </div>
       </div>
@@ -163,7 +164,7 @@ export default function Header() {
       {open && (
         <nav
           className="md:hidden"
-          style={{ borderTop: "1px solid #E7E4DC", background: "#FAFAF8" }}
+          style={{ borderTop: "1px solid #2E2E29", background: "#121210" }}
         >
           {NAV.map((n) => {
             const active = n.match(pathname);
@@ -177,9 +178,9 @@ export default function Header() {
                   padding: "14px 20px",
                   fontSize: 15,
                   fontWeight: active ? 700 : 600,
-                  color: active ? "#1B3A6B" : "#1A1A1A",
-                  borderBottom: "1px solid #F0EDE5",
-                  borderLeft: active ? "2px solid #1B3A6B" : "2px solid transparent",
+                  color: active ? "#FFC400" : "#F2F0E9",
+                  borderBottom: "1px solid #26261F",
+                  borderLeft: active ? "2px solid #FFC400" : "2px solid transparent",
                 }}
               >
                 {n.label}
@@ -190,7 +191,7 @@ export default function Header() {
             href={`https://wa.me/${config.whatsappNumber}`}
             target="_blank"
             rel="noreferrer"
-            style={{ display: "block", padding: "14px 20px", fontSize: 15, fontWeight: 600, color: "#1B3A6B" }}
+            style={{ display: "block", padding: "14px 20px", fontSize: 15, fontWeight: 600, color: "#FFC400" }}
           >
             WhatsApp us
           </a>
