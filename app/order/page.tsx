@@ -33,20 +33,20 @@ const kicker: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
   letterSpacing: ".16em",
-  color: "#8A8578",
+  color: "#9A968A",
 };
 const kickerLg: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 700,
   letterSpacing: ".2em",
-  color: "#8A8578",
+  color: "#9A968A",
 };
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "11px 13px",
-  border: "1px solid #D8D2C4",
+  border: "1px solid #3E3E36",
   borderRadius: 6,
-  background: "#fff",
+  background: "#1C1C18",
 };
 const mono = "mono";
 
@@ -88,8 +88,8 @@ function chipStyle(selected: boolean): React.CSSProperties {
     cursor: "pointer",
     whiteSpace: "nowrap",
     ...(selected
-      ? { background: "#1B3A6B", color: "#fff", border: "1px solid #1B3A6B" }
-      : { background: "#fff", color: "inherit", border: "1px solid #D8D2C4" }),
+      ? { background: "#FFC400", color: "#111", border: "1px solid #FFC400" }
+      : { background: "#1C1C18", color: "#F2F0E9", border: "1px solid #3E3E36" }),
   };
 }
 
@@ -130,6 +130,7 @@ export default function OrderPage() {
   const [custPhone, setCustPhone] = useState("");
   const [placed, setPlaced] = useState(false);
   const [orderNo, setOrderNo] = useState("");
+  const [branchWhatsapp, setBranchWhatsapp] = useState<string | undefined>(undefined);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -281,8 +282,9 @@ export default function OrderPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await res.json()) as { orderNo?: string };
+      const data = (await res.json()) as { orderNo?: string; whatsapp?: string | null };
       no = data.orderNo ?? "";
+      if (data.whatsapp) setBranchWhatsapp(data.whatsapp);
       if (!no) throw new Error("no orderNo");
     } catch {
       const now = new Date();
@@ -335,7 +337,7 @@ export default function OrderPage() {
               alignItems: "flex-end",
               gap: 24,
               flexWrap: "wrap",
-              borderBottom: "1px solid #E7E4DC",
+              borderBottom: "1px solid #2E2E29",
               paddingBottom: 24,
             }}
           >
@@ -358,8 +360,8 @@ export default function OrderPage() {
                 const n = i + 1;
                 const current = n === step;
                 const done = n < step;
-                const numColor = current ? "#F5821F" : done ? "#1A1A1A" : "#C9C4B8";
-                const labColor = current || done ? "#1A1A1A" : "#C9C4B8";
+                const numColor = current ? "#FFC400" : done ? "#F2F0E9" : "#57544B";
+                const labColor = current || done ? "#F2F0E9" : "#57544B";
                 return (
                   <div key={si.n} style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
                     <div className={mono} style={{ fontSize: 12, fontWeight: 600, color: numColor }}>
@@ -374,7 +376,7 @@ export default function OrderPage() {
                 style={{
                   background: "none",
                   border: 0,
-                  color: "#B0AB9F",
+                  color: "#6E6B62",
                   fontSize: 12,
                   cursor: "pointer",
                   textDecoration: "underline",
@@ -434,8 +436,8 @@ export default function OrderPage() {
           onClick={() => fileInputRef.current?.click()}
           style={{
             width: "100%",
-            background: "#fff",
-            border: "1px dashed #B8B2A4",
+            background: "#1C1C18",
+            border: "1px dashed #55524A",
             borderRadius: 8,
             padding: "44px 24px",
             cursor: "pointer",
@@ -443,7 +445,7 @@ export default function OrderPage() {
           }}
         >
           <div style={{ fontSize: 17, fontWeight: 700 }}>Drop files here, or click to browse</div>
-          <div style={{ marginTop: 8, fontSize: 13, color: "#8A8578" }}>
+          <div style={{ marginTop: 8, fontSize: 13, color: "#9A968A" }}>
             PDF, JPG, PNG, DOCX, PPTX, XLSX · max 25 MB per file
           </div>
         </button>
@@ -452,7 +454,7 @@ export default function OrderPage() {
           {files.map((f) => {
             const needsPages = f.pages <= 0;
             const badgeColor =
-              f.kind === "pdf" ? "#B23B3B" : f.kind === "image" ? "#1F6B3E" : "#1B3A6B";
+              f.kind === "pdf" ? "#F08A8A" : f.kind === "image" ? "#6FCF8E" : "#FFC400";
             const meta = needsPages
               ? "page count needed"
               : f.kind === "image"
@@ -461,7 +463,7 @@ export default function OrderPage() {
               ? `${f.pages} pages · parsed by pdf.js`
               : `${f.pages} pages`;
             return (
-              <div key={f.id} style={{ borderBottom: "1px solid #E7E4DC", padding: "18px 4px" }}>
+              <div key={f.id} style={{ borderBottom: "1px solid #2E2E29", padding: "18px 4px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                   <div
                     className={mono}
@@ -493,7 +495,7 @@ export default function OrderPage() {
                     >
                       {f.name}
                     </div>
-                    <div style={{ fontSize: 13, color: "#8A8578", marginTop: 2 }}>{meta}</div>
+                    <div style={{ fontSize: 13, color: "#9A968A", marginTop: 2 }}>{meta}</div>
                   </div>
                   <button
                     className="h-remove"
@@ -501,7 +503,7 @@ export default function OrderPage() {
                     style={{
                       background: "none",
                       border: 0,
-                      color: "#B0AB9F",
+                      color: "#6E6B62",
                       fontSize: 13,
                       fontWeight: 600,
                       cursor: "pointer",
@@ -522,7 +524,7 @@ export default function OrderPage() {
                       flexWrap: "wrap",
                     }}
                   >
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#8A5A22" }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#E8B25C" }}>
                       How many pages in this file?
                     </div>
                     <input
@@ -533,12 +535,12 @@ export default function OrderPage() {
                       style={{
                         width: 90,
                         padding: "9px 11px",
-                        border: "1px solid #D8D2C4",
+                        border: "1px solid #3E3E36",
                         borderRadius: 6,
-                        background: "#fff",
+                        background: "#1C1C18",
                       }}
                     />
-                    <div style={{ fontSize: 12.5, color: "#8A8578" }}>
+                    <div style={{ fontSize: 12.5, color: "#9A968A" }}>
                       The shop verifies the count; price may adjust and you&apos;ll be emailed.
                     </div>
                   </div>
@@ -549,7 +551,7 @@ export default function OrderPage() {
         </div>
 
         {files.length === 0 && (
-          <div style={{ marginTop: 20, fontSize: 13.5, color: "#B0AB9F" }}>
+          <div style={{ marginTop: 20, fontSize: 13.5, color: "#6E6B62" }}>
             No files yet — everything starts here.
           </div>
         )}
@@ -578,8 +580,8 @@ export default function OrderPage() {
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
                 ...(on
-                  ? { background: "#1B3A6B", color: "#fff", border: "1px solid #1B3A6B" }
-                  : { background: "#fff", color: "inherit", border: "1px solid #D8D2C4" }),
+                  ? { background: "#FFC400", color: "#111", border: "1px solid #FFC400" }
+                  : { background: "#1C1C18", color: "#F2F0E9", border: "1px solid #3E3E36" }),
               }}
             >
               {f.name}
@@ -657,23 +659,23 @@ export default function OrderPage() {
                 marginTop: 10,
                 display: "flex",
                 alignItems: "center",
-                border: "1px solid #D8D2C4",
+                border: "1px solid #3E3E36",
                 borderRadius: 6,
                 overflow: "hidden",
-                background: "#fff",
+                background: "#1C1C18",
                 width: "fit-content",
               }}
             >
               <button
                 onClick={() => patchPrefs({ copies: Math.max(1, p.copies - 1) })}
                 style={{
-                  background: "#F5F3EC",
+                  background: "#26261F",
                   border: 0,
                   padding: "10px 16px",
                   fontSize: 16,
                   fontWeight: 700,
                   cursor: "pointer",
-                  color: "#1B3A6B",
+                  color: "#FFC400",
                 }}
               >
                 −
@@ -684,13 +686,13 @@ export default function OrderPage() {
               <button
                 onClick={() => patchPrefs({ copies: p.copies + 1 })}
                 style={{
-                  background: "#F5F3EC",
+                  background: "#26261F",
                   border: 0,
                   padding: "10px 16px",
                   fontSize: 16,
                   fontWeight: 700,
                   cursor: "pointer",
-                  color: "#1B3A6B",
+                  color: "#FFC400",
                 }}
               >
                 +
@@ -708,7 +710,7 @@ export default function OrderPage() {
             padding: 0,
             fontSize: 13.5,
             fontWeight: 700,
-            color: "#1B3A6B",
+            color: "#FFC400",
             cursor: "pointer",
             textDecoration: "underline",
           }}
@@ -724,7 +726,7 @@ export default function OrderPage() {
               display: "grid",
               gridTemplateColumns: "repeat(2,minmax(0,1fr))",
               gap: "32px 48px",
-              borderTop: "1px solid #E7E4DC",
+              borderTop: "1px solid #2E2E29",
               paddingTop: 24,
             }}
           >
@@ -774,7 +776,7 @@ export default function OrderPage() {
           </div>
         )}
 
-        <div style={{ marginTop: 36, borderTop: "1px solid #E7E4DC", paddingTop: 24 }}>
+        <div style={{ marginTop: 36, borderTop: "1px solid #2E2E29", paddingTop: 24 }}>
           <div style={kickerLg}>WHOLE ORDER</div>
           <div
             className="grid-2"
@@ -832,7 +834,7 @@ export default function OrderPage() {
     const sheetCount = Math.min(6, Math.max(1, cost.sidesPerCopy));
     const landscape = p.orient === "landscape";
     const cols = p.nup === 1 ? 1 : 2;
-    const blockColor = p.color === "color" ? "#1B3A6B" : "#C9CDD4";
+    const blockColor = p.color === "color" ? "#FFC400" : "#C9CDD4";
 
     return (
       <div>
@@ -841,8 +843,8 @@ export default function OrderPage() {
           style={{
             marginTop: 18,
             fontSize: 13.5,
-            color: "#55524A",
-            borderLeft: "2px solid #1B3A6B",
+            color: "#C9C6BC",
+            borderLeft: "2px solid #FFC400",
             paddingLeft: 14,
           }}
         >
@@ -864,8 +866,8 @@ export default function OrderPage() {
               <div key={i}>
                 <div
                   style={{
-                    background: "#fff",
-                    border: isBack ? "1px dashed #B8B2A4" : "1px solid #E7E4DC",
+                    background: "#FCFCFA",
+                    border: isBack ? "1px dashed #55524A" : "1px solid #3E3E36",
                     height: landscape ? 110 : 190,
                     borderRadius: 4,
                     padding: 10,
@@ -890,7 +892,7 @@ export default function OrderPage() {
                           flexDirection: "column",
                           gap: 3,
                           padding: 5,
-                          background: "#fff",
+                          background: "#FCFCFA",
                           overflow: "hidden",
                         }}
                       >
@@ -905,7 +907,7 @@ export default function OrderPage() {
                     ))}
                   </div>
                 </div>
-                <div className={mono} style={{ fontSize: 11.5, color: "#8A8578", marginTop: 7 }}>
+                <div className={mono} style={{ fontSize: 11.5, color: "#9A968A", marginTop: 7 }}>
                   {label}
                 </div>
               </div>
@@ -913,7 +915,7 @@ export default function OrderPage() {
           })}
         </div>
 
-        <div style={{ marginTop: 20, fontSize: 12.5, color: "#B0AB9F", lineHeight: 1.5 }}>
+        <div style={{ marginTop: 20, fontSize: 12.5, color: "#6E6B62", lineHeight: 1.5 }}>
           Rendered with pdf.js in production — thumbnails reflect colour, N-up and single/double side.
         </div>
       </div>
@@ -926,8 +928,8 @@ export default function OrderPage() {
       <div>
         <div
           style={{
-            border: "1px solid #E7E4DC",
-            background: "#EDEBE3",
+            border: "1px solid #2E2E29",
+            background: "#23231E",
             height: 220,
             position: "relative",
             overflow: "hidden",
@@ -939,7 +941,7 @@ export default function OrderPage() {
               position: "absolute",
               inset: 0,
               backgroundImage:
-                "linear-gradient(#ffffff8a 1px,transparent 1px),linear-gradient(90deg,#ffffff8a 1px,transparent 1px)",
+                "linear-gradient(#ffffff12 1px,transparent 1px),linear-gradient(90deg,#ffffff12 1px,transparent 1px)",
               backgroundSize: "32px 32px",
             }}
           />
@@ -962,14 +964,14 @@ export default function OrderPage() {
                   width: 22,
                   height: 22,
                   borderRadius: "50%",
-                  background: sel ? "#F5821F" : "#1B3A6B",
-                  color: "#fff",
+                  background: sel ? "#FFC400" : "#1C1C18",
+                  color: sel ? "#111" : "#F2F0E9",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 11,
                   fontWeight: 600,
-                  border: "2px solid #fff",
+                  border: "2px solid #3E3E36",
                   boxShadow: "0 2px 6px rgba(0,0,0,.25)",
                   cursor: "pointer",
                 }}
@@ -985,8 +987,8 @@ export default function OrderPage() {
               left: 12,
               bottom: 10,
               fontSize: 10.5,
-              color: "#6F6B62",
-              background: "#ffffffd8",
+              color: "#9A968A",
+              background: "#1C1C18d8",
               padding: "4px 8px",
               borderRadius: 4,
             }}
@@ -1015,9 +1017,9 @@ export default function OrderPage() {
                 }}
                 style={{
                   textAlign: "left",
-                  background: "#fff",
-                  border: sel ? "1px solid #1B3A6B" : "1px solid #E7E4DC",
-                  boxShadow: sel ? "0 0 0 1px #1B3A6B" : "none",
+                  background: "#1C1C18",
+                  border: sel ? "1px solid #FFC400" : "1px solid #2E2E29",
+                  boxShadow: sel ? "0 0 0 1px #FFC400" : "none",
                   borderRadius: 8,
                   padding: 16,
                   cursor: "pointer",
@@ -1035,7 +1037,7 @@ export default function OrderPage() {
                   <div style={{ fontSize: 15.5, fontWeight: 700 }}>{b.name}</div>
                   <div
                     className={mono}
-                    style={{ fontSize: 12, fontWeight: 700, color: "#1B3A6B" }}
+                    style={{ fontSize: 12, fontWeight: 700, color: "#FFC400" }}
                   >
                     {demoKm(i).toFixed(1)} km
                   </div>
@@ -1043,7 +1045,7 @@ export default function OrderPage() {
                 <div
                   style={{
                     fontSize: 11,
-                    color: "#F5821F",
+                    color: "#FFC400",
                     fontWeight: 700,
                     letterSpacing: ".06em",
                     marginTop: 2,
@@ -1051,10 +1053,10 @@ export default function OrderPage() {
                 >
                   {b.brand.toUpperCase()}
                 </div>
-                <div style={{ fontSize: 12.5, color: "#55524A", marginTop: 8, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12.5, color: "#C9C6BC", marginTop: 8, lineHeight: 1.5 }}>
                   {b.address}
                 </div>
-                <div style={{ fontSize: 12.5, color: "#8A8578", marginTop: 6 }}>
+                <div style={{ fontSize: 12.5, color: "#9A968A", marginTop: 6 }}>
                   {b.hours} · {b.phone}
                 </div>
               </button>
@@ -1069,7 +1071,7 @@ export default function OrderPage() {
   function renderStep5() {
     const ruleBoxStyle: React.CSSProperties = {
       marginTop: 16,
-      borderLeft: free ? "2px solid #1F6B3E" : "2px solid #8A5A22",
+      borderLeft: free ? "2px solid #6FCF8E" : "2px solid #E8B25C",
       paddingLeft: 16,
     };
     return (
@@ -1126,7 +1128,7 @@ export default function OrderPage() {
                   fontSize: 13.5,
                 }}
               >
-                <div style={{ color: "#8A8578" }}>Distance from {branchName}</div>
+                <div style={{ color: "#9A968A" }}>Distance from {branchName}</div>
                 <div className={mono} style={{ fontWeight: 700 }}>
                   {distance.toFixed(1)} km
                 </div>
@@ -1140,15 +1142,15 @@ export default function OrderPage() {
                 onChange={(e) => setDistance(Number(e.target.value))}
                 style={{ width: "100%", marginTop: 10 }}
               />
-              <div style={{ fontSize: 11.5, color: "#B0AB9F" }}>
+              <div style={{ fontSize: 11.5, color: "#6E6B62" }}>
                 Prototype: drag to simulate the geocoded distance.
               </div>
             </div>
             <div>
               <div
                 style={{
-                  border: "1px solid #E7E4DC",
-                  background: "#EDEBE3",
+                  border: "1px solid #2E2E29",
+                  background: "#23231E",
                   height: 150,
                   position: "relative",
                   overflow: "hidden",
@@ -1160,7 +1162,7 @@ export default function OrderPage() {
                     position: "absolute",
                     inset: 0,
                     backgroundImage:
-                      "linear-gradient(#ffffff8a 1px,transparent 1px),linear-gradient(90deg,#ffffff8a 1px,transparent 1px)",
+                      "linear-gradient(#ffffff12 1px,transparent 1px),linear-gradient(90deg,#ffffff12 1px,transparent 1px)",
                     backgroundSize: "26px 26px",
                   }}
                 />
@@ -1173,8 +1175,8 @@ export default function OrderPage() {
                     width: 16,
                     height: 16,
                     borderRadius: "50%",
-                    background: "#F5821F",
-                    border: "3px solid #fff",
+                    background: "#FFC400",
+                    border: "3px solid #3E3E36",
                     boxShadow: "0 3px 8px rgba(0,0,0,.25)",
                   }}
                 />
@@ -1184,8 +1186,8 @@ export default function OrderPage() {
                     left: 10,
                     bottom: 8,
                     fontSize: 10.5,
-                    color: "#6F6B62",
-                    background: "#ffffffd8",
+                    color: "#9A968A",
+                    background: "#1C1C18d8",
                     padding: "4px 8px",
                     borderRadius: 4,
                   }}
@@ -1197,7 +1199,7 @@ export default function OrderPage() {
                 <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: ".02em" }}>
                   {free ? "FREE delivery" : "Delivery charges at actuals"}
                 </div>
-                <div style={{ fontSize: 12.5, marginTop: 5, lineHeight: 1.55, color: "#55524A" }}>
+                <div style={{ fontSize: 12.5, marginTop: 5, lineHeight: 1.55, color: "#C9C6BC" }}>
                   {free
                     ? `Within ${config.freeDeliveryRadiusKm} km and over ₹500 — Virat arranges and pays the courier.`
                     : "Sent as a Cash-on-Delivery courier (Uber/Rapido parcel); you pay the delivery partner directly on receipt."}
@@ -1208,12 +1210,12 @@ export default function OrderPage() {
         )}
 
         {deliveryType === "pickup" && (
-          <div style={{ marginTop: 24, borderLeft: "2px solid #1B3A6B", paddingLeft: 16 }}>
+          <div style={{ marginTop: 24, borderLeft: "2px solid #FFC400", paddingLeft: 16 }}>
             <div style={{ fontSize: 15, fontWeight: 700 }}>Pick up from {branchName}</div>
             <div
               style={{
                 fontSize: 13,
-                color: "#55524A",
+                color: "#C9C6BC",
                 marginTop: 5,
                 lineHeight: 1.55,
                 maxWidth: 480,
@@ -1221,7 +1223,7 @@ export default function OrderPage() {
             >
               {selectedBranch.address}
             </div>
-            <div style={{ fontSize: 13, color: "#1F6B3E", fontWeight: 700, marginTop: 8 }}>
+            <div style={{ fontSize: 13, color: "#6FCF8E", fontWeight: 700, marginTop: 8 }}>
               Pickup is free — we message you when it&apos;s ready.
             </div>
           </div>
@@ -1231,7 +1233,7 @@ export default function OrderPage() {
           className="grid-2"
           style={{
             marginTop: 36,
-            borderTop: "1px solid #E7E4DC",
+            borderTop: "1px solid #2E2E29",
             paddingTop: 24,
             display: "grid",
             gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)",
@@ -1247,7 +1249,7 @@ export default function OrderPage() {
                     width: 120,
                     height: 120,
                     flex: "none",
-                    border: "1px solid #E7E4DC",
+                    border: "1px solid #2E2E29",
                     borderRadius: 8,
                     background:
                       "repeating-conic-gradient(#1A1A1A 0% 25%, #ffffff 0% 50%) 50%/14px 14px",
@@ -1265,7 +1267,7 @@ export default function OrderPage() {
                       justifyContent: "center",
                       fontSize: 8,
                       fontWeight: 800,
-                      color: "#1B3A6B",
+                      color: "#111",
                       textAlign: "center",
                       lineHeight: 1.2,
                     }}
@@ -1293,8 +1295,8 @@ export default function OrderPage() {
                     style={{
                       display: "inline-block",
                       marginTop: 12,
-                      border: "1px solid #1B3A6B",
-                      color: "#1B3A6B",
+                      border: "1px solid #FFC400",
+                      color: "#FFC400",
                       fontSize: 13,
                       fontWeight: 700,
                       padding: "9px 14px",
@@ -1314,7 +1316,7 @@ export default function OrderPage() {
                 className={mono}
                 style={{ ...inputStyle, marginTop: 10 }}
               />
-              <div style={{ fontSize: 12, color: "#B0AB9F", marginTop: 8 }}>
+              <div style={{ fontSize: 12, color: "#6E6B62", marginTop: 8 }}>
                 Order stays &ldquo;payment pending verification&rdquo; until the shop confirms in the
                 bank app.
               </div>
@@ -1325,7 +1327,7 @@ export default function OrderPage() {
               <div
                 style={{
                   fontSize: 13.5,
-                  color: "#55524A",
+                  color: "#C9C6BC",
                   marginTop: 14,
                   lineHeight: 1.6,
                   maxWidth: 380,
@@ -1339,12 +1341,12 @@ export default function OrderPage() {
                   <div
                     key={m}
                     style={{
-                      border: "1px solid #D8D2C4",
+                      border: "1px solid #3E3E36",
                       borderRadius: 4,
                       padding: "7px 11px",
                       fontSize: 12,
                       fontWeight: 600,
-                      color: "#55524A",
+                      color: "#C9C6BC",
                     }}
                   >
                     {m}
@@ -1370,7 +1372,7 @@ export default function OrderPage() {
               onChange={(e) => setCustPhone(e.target.value)}
               style={{ ...inputStyle, marginTop: 10 }}
             />
-            <div style={{ fontSize: 12, color: "#B0AB9F", marginTop: 8 }}>
+            <div style={{ fontSize: 12, color: "#6E6B62", marginTop: 8 }}>
               Guest checkout — no account needed. We offer to save your details after the order.
             </div>
           </div>
@@ -1384,8 +1386,8 @@ export default function OrderPage() {
     const nextStyle: React.CSSProperties = canContinue
       ? {
           width: "100%",
-          background: "#F5821F",
-          color: "#fff",
+          background: "#FFC400",
+          color: "#111",
           border: 0,
           borderRadius: 6,
           padding: "14px",
@@ -1395,8 +1397,8 @@ export default function OrderPage() {
         }
       : {
           width: "100%",
-          background: "#EFEEE9",
-          color: "#B0AB9F",
+          background: "#26261F",
+          color: "#6E6B62",
           border: 0,
           borderRadius: 6,
           padding: "14px",
@@ -1411,15 +1413,15 @@ export default function OrderPage() {
         style={{
           position: "sticky",
           top: 88,
-          border: "1px solid #E7E4DC",
+          border: "1px solid #2E2E29",
           borderRadius: 8,
-          background: "#fff",
+          background: "#1C1C18",
         }}
       >
         <div
           style={{
             padding: "16px 20px",
-            borderBottom: "1px solid #E7E4DC",
+            borderBottom: "1px solid #2E2E29",
             fontSize: 13,
             fontWeight: 700,
             letterSpacing: ".08em",
@@ -1437,15 +1439,15 @@ export default function OrderPage() {
                 gap: 12,
                 fontSize: 13,
                 padding: "7px 0",
-                borderBottom: "1px solid #F0EDE5",
+                borderBottom: "1px solid #26261F",
               }}
             >
-              <div style={{ color: "#55524A", lineHeight: 1.4 }}>{l.label}</div>
+              <div style={{ color: "#C9C6BC", lineHeight: 1.4 }}>{l.label}</div>
               <div style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{inr(l.amount)}</div>
             </div>
           ))}
           {order.filesWithPages === 0 && (
-            <div style={{ fontSize: 13, color: "#B0AB9F", padding: "7px 0" }}>
+            <div style={{ fontSize: 13, color: "#6E6B62", padding: "7px 0" }}>
               Add files to see the price.
             </div>
           )}
@@ -1459,11 +1461,11 @@ export default function OrderPage() {
           }}
         >
           <div style={{ fontSize: 13, fontWeight: 700 }}>Total</div>
-          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em", color: "#1B3A6B" }}>
+          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em", color: "#FFC400" }}>
             {inr(order.total)}
           </div>
         </div>
-        <div style={{ padding: "0 20px 16px", fontSize: 12, color: "#8A8578", lineHeight: 1.5 }}>
+        <div style={{ padding: "0 20px 16px", fontSize: 12, color: "#9A968A", lineHeight: 1.5 }}>
           {order.totalSheets} sheets · {order.filesWithPages} files · updates live
         </div>
         <div style={{ padding: "0 20px 20px" }}>
@@ -1478,7 +1480,7 @@ export default function OrderPage() {
                 width: "100%",
                 background: "none",
                 border: 0,
-                color: "#8A8578",
+                color: "#9A968A",
                 fontSize: 12.5,
                 fontWeight: 600,
                 cursor: "pointer",
@@ -1492,9 +1494,9 @@ export default function OrderPage() {
         <div
           style={{
             padding: "12px 20px",
-            borderTop: "1px solid #E7E4DC",
+            borderTop: "1px solid #2E2E29",
             fontSize: 11.5,
-            color: "#8A8578",
+            color: "#9A968A",
             lineHeight: 1.5,
           }}
         >
@@ -1525,6 +1527,7 @@ export default function OrderPage() {
       utr,
       custName,
       custPhone,
+      whatsappNumber: branchWhatsapp,
     };
     const waUrl = buildOrderWhatsappUrl(payload);
     const trackerLabels = [
@@ -1538,11 +1541,11 @@ export default function OrderPage() {
 
     return (
       <div style={{ maxWidth: 640, margin: "24px auto 0" }}>
-        <div style={{ ...kickerLg, color: "#1F6B3E" }}>ORDER PLACED</div>
+        <div style={{ ...kickerLg, color: "#6FCF8E" }}>ORDER PLACED</div>
         <h1 style={{ margin: "12px 0 0", fontSize: 40, fontWeight: 800, letterSpacing: "-.025em" }}>
           {manual ? "Payment reference received." : "Payment successful."}
         </h1>
-        <p style={{ margin: "14px 0 0", fontSize: 15, color: "#55524A", lineHeight: 1.6 }}>
+        <p style={{ margin: "14px 0 0", fontSize: 15, color: "#C9C6BC", lineHeight: 1.6 }}>
           {manual
             ? "We've got your UPI reference. Your order is confirmed the moment the shop verifies the payment in their bank app — usually within a few minutes. Attach your files on WhatsApp so we can start printing."
             : "Your payment went through and your order is confirmed. Attach your files on WhatsApp so the shop can start printing right away."}
@@ -1551,9 +1554,9 @@ export default function OrderPage() {
         <div
           style={{
             marginTop: 24,
-            border: "1px solid #E7E4DC",
+            border: "1px solid #2E2E29",
             borderRadius: 8,
-            background: "#fff",
+            background: "#1C1C18",
             padding: "18px 22px",
             display: "flex",
             justifyContent: "space-between",
@@ -1567,10 +1570,10 @@ export default function OrderPage() {
               {orderNo}
             </div>
           </div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: "#1B3A6B" }}>{inr(order.total)}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#FFC400" }}>{inr(order.total)}</div>
         </div>
 
-        <div style={{ marginTop: 28, borderTop: "1px solid #E7E4DC", paddingTop: 22 }}>
+        <div style={{ marginTop: 28, borderTop: "1px solid #2E2E29", paddingTop: 22 }}>
           <div style={kickerLg}>TRACK YOUR ORDER</div>
           <div style={{ marginTop: 18 }}>
             {trackerLabels.map((label, i) => {
@@ -1593,8 +1596,8 @@ export default function OrderPage() {
                         height: 14,
                         borderRadius: "50%",
                         flex: "none",
-                        background: done ? "#1F6B3E" : "#fff",
-                        border: done ? "0" : "2px solid #C9C4B8",
+                        background: done ? "#6FCF8E" : "#121210",
+                        border: done ? "0" : "2px solid #57544B",
                       }}
                     />
                     {!last && (
@@ -1603,7 +1606,7 @@ export default function OrderPage() {
                           width: 2,
                           minHeight: 22,
                           flex: 1,
-                          background: i < doneCount - 1 ? "#1F6B3E" : "#E7E4DC",
+                          background: i < doneCount - 1 ? "#6FCF8E" : "#2E2E29",
                         }}
                       />
                     )}
@@ -1613,12 +1616,12 @@ export default function OrderPage() {
                       style={{
                         fontSize: 14,
                         fontWeight: done ? 700 : 600,
-                        color: done ? "#1A1A1A" : "#8A8578",
+                        color: done ? "#F2F0E9" : "#9A968A",
                       }}
                     >
                       {label}
                     </div>
-                    <div className={mono} style={{ fontSize: 12, color: "#B0AB9F" }}>
+                    <div className={mono} style={{ fontSize: 12, color: "#6E6B62" }}>
                       {done ? "now" : ""}
                     </div>
                   </div>
@@ -1626,7 +1629,7 @@ export default function OrderPage() {
               );
             })}
           </div>
-          <div style={{ fontSize: 12, color: "#B0AB9F" }}>
+          <div style={{ fontSize: 12, color: "#6E6B62" }}>
             Tracker link emailed to you — no login needed.
           </div>
         </div>
@@ -1639,8 +1642,8 @@ export default function OrderPage() {
           style={{
             display: "block",
             marginTop: 28,
-            background: "#F5821F",
-            color: "#fff",
+            background: "#FFC400",
+            color: "#111",
             border: 0,
             borderRadius: 6,
             padding: "15px 20px",
@@ -1651,7 +1654,7 @@ export default function OrderPage() {
         >
           Send files &amp; confirm on WhatsApp
         </a>
-        <div style={{ fontSize: 12.5, color: "#B0AB9F", marginTop: 8, textAlign: "center" }}>
+        <div style={{ fontSize: 12.5, color: "#6E6B62", marginTop: 8, textAlign: "center" }}>
           Attach your files in the WhatsApp chat to finish.
         </div>
 
@@ -1660,7 +1663,7 @@ export default function OrderPage() {
             onClick={resetOrder}
             style={{
               background: "none",
-              border: "1px solid #C9C4B8",
+              border: "1px solid #57544B",
               borderRadius: 6,
               padding: "13px 20px",
               fontSize: 14,

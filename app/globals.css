@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --blue: #1b3a6b;
-  --orange: #f5821f;
+  --blue: #ffc400;
+  --orange: #ffc400;
 }
 
 * {
@@ -19,17 +19,17 @@ body {
 
 body {
   font-family: var(--font-jakarta), system-ui, sans-serif;
-  color: #1a1a1a;
-  background: #fafaf8;
+  color: #f2f0e9;
+  background: #121210;
   -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: #1b3a6b;
+  color: #ffc400;
   text-decoration: none;
 }
 a:hover {
-  color: #f5821f;
+  color: #fff;
 }
 
 input,
@@ -42,11 +42,11 @@ button {
 }
 
 input[type="range"] {
-  accent-color: #f5821f;
+  accent-color: #ffc400;
 }
 
 ::selection {
-  background: #f5821f2e;
+  background: #ffc4002e;
 }
 
 .mono {
@@ -55,40 +55,52 @@ input[type="range"] {
 
 /* Hover helpers (the prototype uses style-hover; we replicate the exact ones). */
 .h-navlink {
-  color: #6f6b62;
+  color: #9a968a;
   transition: color 0.12s;
 }
 .h-navlink:hover {
-  color: #1a1a1a;
+  color: #f2f0e9;
 }
 .h-orange:hover {
-  background: #e0741a !important;
+  background: #e6b000 !important;
 }
 .h-blue:hover {
-  background: #142c51 !important;
+  background: #e6b000 !important;
 }
 .h-cell:hover {
-  background: #ffffff !important;
+  background: #1c1c18 !important;
 }
 .h-outline:hover {
-  border-color: #1a1a1a !important;
+  border-color: #f2f0e9 !important;
 }
 .h-dash:hover {
-  border-color: #f5821f !important;
+  border-color: #ffc400 !important;
 }
 .h-white:hover {
-  background: #f0ede5 !important;
+  background: #000 !important;
 }
 .h-remove:hover {
-  color: #b23b3b !important;
+  color: #f08a8a !important;
 }
 .h-ink:hover {
-  color: #1a1a1a !important;
+  color: #f2f0e9 !important;
 }
 
 /* One accordion icon rotation transition per the brief. */
 .faq-icon {
   transition: transform 0.18s;
+}
+
+/* Mobile hamburger — shown below the md breakpoint only. */
+.ve-burger {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+@media (min-width: 768px) {
+  .ve-burger {
+    display: none;
+  }
 }
 
 @media print {

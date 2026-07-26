@@ -18,6 +18,7 @@ create table if not exists branches (
   upi_id text,
   upi_qr_url text,
   notify_email text,
+  notify_whatsapp text, -- customer order messages open to this WhatsApp number
   is_active boolean not null default true,
   created_at timestamptz not null default now()
 );
@@ -77,8 +78,26 @@ create table if not exists orders (
   utr_reference text,
   utm jsonb,
   items jsonb, -- denormalized snapshot of order_items for the manual/no-auth path
+  completed_at timestamptz, -- set when status becomes COMPLETED/CANCELLED (see trigger)
+  files_purged boolean not null default false, -- 7-day retention cron marks this
   created_at timestamptz not null default now()
 );
+
+-- Stamp completed_at automatically when an order reaches a terminal status —
+-- the file-retention cron (app/api/cron/cleanup) deletes print files from
+-- Storage 7 days after this timestamp.
+create or replace function stamp_completed_at() returns trigger language plpgsql as $$
+begin
+  if new.status in ('COMPLETED','CANCELLED') and old.status is distinct from new.status then
+    new.completed_at := now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists orders_stamp_completed on orders;
+create trigger orders_stamp_completed before update on orders
+  for each row execute function stamp_completed_at();
 
 create table if not exists order_items (
   id uuid primary key default gen_random_uuid(),

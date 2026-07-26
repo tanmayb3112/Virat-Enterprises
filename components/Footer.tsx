@@ -3,7 +3,7 @@ import { config } from "@/lib/config";
 
 export default function Footer() {
   return (
-    <div style={{ background: "#141414", color: "#8F8B82" }}>
+    <div style={{ background: "#000", color: "#8F8B82" }}>
       <div
         className="ve-footer-grid"
         style={{
@@ -16,7 +16,7 @@ export default function Footer() {
         }}
       >
         <div>
-          <div style={{ color: "#fff", fontWeight: 800, letterSpacing: ".16em", fontSize: 13 }}>
+          <div style={{ color: "#F2F0E9", fontWeight: 800, letterSpacing: ".16em", fontSize: 13 }}>
             VIRAT ENTERPRISES
           </div>
           <div style={{ fontSize: 13, marginTop: 10, lineHeight: 1.6, maxWidth: 280 }}>
@@ -27,7 +27,7 @@ export default function Footer() {
           <FooterLink href="/order">Order prints</FooterLink>
           <FooterLink href="/branches">Branches</FooterLink>
           <FooterLink href="/links">Links</FooterLink>
-          <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noreferrer" style={{ color: "#C9C4B8" }}>
+          <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noreferrer" style={{ color: "#B9B6AC" }}>
             WhatsApp
           </a>
         </FooterCol>
@@ -35,6 +35,7 @@ export default function Footer() {
           <FooterLink href="/franchise">Franchise</FooterLink>
           <FooterLink href="/admin">Staff login</FooterLink>
           <FooterLink href="/admin/reports">Reports</FooterLink>
+          <FooterLink href="/admin/settings">Settings</FooterLink>
         </FooterCol>
         <FooterCol title="LEGAL">
           <FooterLink href="/legal/terms">Terms</FooterLink>
@@ -54,7 +55,7 @@ export default function Footer() {
 function FooterCol({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13 }}>
-      <div style={{ color: "#fff", fontWeight: 700, fontSize: 12, letterSpacing: ".12em" }}>{title}</div>
+      <div style={{ color: "#F2F0E9", fontWeight: 700, fontSize: 12, letterSpacing: ".12em" }}>{title}</div>
       {children}
     </div>
   );
@@ -62,7 +63,7 @@ function FooterCol({ title, children }: { title: string; children: React.ReactNo
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} style={{ color: "#C9C4B8" }}>
+    <Link href={href} style={{ color: "#B9B6AC" }}>
       {children}
     </Link>
   );

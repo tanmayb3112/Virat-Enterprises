@@ -34,13 +34,13 @@ export default function LinksPage() {
           fontSize: 15,
           fontWeight: 800,
           letterSpacing: "0.16em",
-          color: "#1A1A1A",
+          color: "#F2F0E9",
         }}
       >
         VIRAT ENTERPRISES
       </div>
-      <div style={{ fontSize: 15, color: "#8A8578", marginTop: 8 }}>Naam hi Kaafi hai</div>
-      <div className="mono" style={{ fontSize: 12.5, color: "#B0AB9F", marginTop: 10 }}>
+      <div style={{ fontSize: 15, color: "#9A968A", marginTop: 8 }}>Naam hi Kaafi hai</div>
+      <div className="mono" style={{ fontSize: 12.5, color: "#6E6B62", marginTop: 10 }}>
         Printing &amp; Xerox · 6 shops in Pune
       </div>
 
@@ -61,10 +61,10 @@ export default function LinksPage() {
             fontSize: 15.5,
             textAlign: "center",
             textDecoration: "none",
-            border: "1px solid #E7E4DC",
-            background: l.primary ? "#F5821F" : "#fff",
-            color: l.primary ? "#fff" : "#1A1A1A",
-            ...(l.primary ? { borderColor: "#F5821F" } : {}),
+            border: "1px solid #2E2E29",
+            background: l.primary ? "#FFC400" : "#1C1C18",
+            color: l.primary ? "#111" : "#F2F0E9",
+            ...(l.primary ? { borderColor: "#FFC400" } : {}),
           };
           const props = l.external
             ? { target: "_blank", rel: "noopener noreferrer" }
@@ -83,7 +83,7 @@ export default function LinksPage() {
         })}
       </div>
 
-      <div className="mono" style={{ fontSize: 12.5, color: "#8A8578", marginTop: 40 }}>
+      <div className="mono" style={{ fontSize: 12.5, color: "#6E6B62", marginTop: 40 }}>
         WhatsApp +91 98231 41366
       </div>
     </div>
