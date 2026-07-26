@@ -18,6 +18,7 @@ create table if not exists branches (
   upi_id text,
   upi_qr_url text,
   notify_email text,
+  notify_whatsapp text, -- customer order messages open to this WhatsApp number
   is_active boolean not null default true,
   created_at timestamptz not null default now()
 );

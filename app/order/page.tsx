@@ -130,6 +130,7 @@ export default function OrderPage() {
   const [custPhone, setCustPhone] = useState("");
   const [placed, setPlaced] = useState(false);
   const [orderNo, setOrderNo] = useState("");
+  const [branchWhatsapp, setBranchWhatsapp] = useState<string | undefined>(undefined);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -281,8 +282,9 @@ export default function OrderPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await res.json()) as { orderNo?: string };
+      const data = (await res.json()) as { orderNo?: string; whatsapp?: string | null };
       no = data.orderNo ?? "";
+      if (data.whatsapp) setBranchWhatsapp(data.whatsapp);
       if (!no) throw new Error("no orderNo");
     } catch {
       const now = new Date();
@@ -1525,6 +1527,7 @@ export default function OrderPage() {
       utr,
       custName,
       custPhone,
+      whatsappNumber: branchWhatsapp,
     };
     const waUrl = buildOrderWhatsappUrl(payload);
     const trackerLabels = [

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { branchCode } from "@/lib/whatsapp";
+import { sendOrderEmail, adminEmails } from "@/lib/notify";
 
 // Persists an order when Supabase is configured; otherwise returns a generated
 // order number so the client can still show a confirmation + WhatsApp handoff.
@@ -67,9 +68,44 @@ export async function POST(req: NextRequest) {
   const { orderNo, token } = genOrderNo(body.branchName || "VIR");
   const supabase = getSupabaseAdmin();
 
+  // Staff email notification — awaited (serverless would kill a dangling
+  // promise) but errors never block the order.
+  // Recipients: the branch's notify_email (from admin settings) + ADMIN_EMAILS.
+  // The branch's configured WhatsApp (admin settings) — returned to the client
+  // so the customer's order message opens to the right branch number.
+  let branchWhatsapp: string | null = null;
+
+  const notifyStaff = async () => {
+    const to = new Set(adminEmails());
+    if (supabase && body.branchId) {
+      const { data } = await supabase
+        .from("branches")
+        .select("notify_email,notify_whatsapp")
+        .eq("id", body.branchId)
+        .maybeSingle();
+      if (data?.notify_email) to.add(data.notify_email);
+      if (data?.notify_whatsapp) branchWhatsapp = data.notify_whatsapp;
+    }
+    const itemsSummary = (body.items as { file_name?: string; page_count?: number }[] | undefined)
+      ?.map((i) => `• ${i.file_name ?? "file"} (${i.page_count ?? "?"} pg)`)
+      .join("\n") ?? "";
+    await sendOrderEmail({
+      to: Array.from(to),
+      orderNo,
+      branchName: body.branchName,
+      total: body.total,
+      deliveryType: body.deliveryType,
+      custName: body.custName,
+      custPhone: body.custPhone,
+      utr: body.utr,
+      itemsSummary,
+    });
+  };
+
   if (!supabase) {
     // Demo / manual mode — no persistence. Client falls back to WhatsApp.
-    return NextResponse.json({ ok: true, orderNo, token, tracked: false });
+    await notifyStaff().catch(() => {});
+    return NextResponse.json({ ok: true, orderNo, token, tracked: false, whatsapp: branchWhatsapp });
   }
 
   try {
@@ -95,9 +131,11 @@ export async function POST(req: NextRequest) {
     });
     if (error) {
       // Table may not exist yet — still let the customer complete via WhatsApp.
-      return NextResponse.json({ ok: true, orderNo, token, tracked: false, warn: error.message });
+      await notifyStaff().catch(() => {});
+      return NextResponse.json({ ok: true, orderNo, token, tracked: false, whatsapp: branchWhatsapp, warn: error.message });
     }
-    return NextResponse.json({ ok: true, orderNo, token, tracked: true });
+    await notifyStaff().catch(() => {});
+    return NextResponse.json({ ok: true, orderNo, token, tracked: true, whatsapp: branchWhatsapp });
   } catch (e) {
     return NextResponse.json({ ok: true, orderNo, token, tracked: false, warn: String(e) });
   }

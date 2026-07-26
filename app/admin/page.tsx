@@ -499,7 +499,10 @@ export default function AdminDashboard() {
             Live queue · Realtime activates with Supabase · staff@virat.co.in
           </div>
           <div style={{ fontSize: '12px', color: '#6E6B62', marginTop: '4px' }}>
-            Demo data — live Realtime streaming activates once Supabase is configured.
+            Demo data — live Realtime streaming activates once Supabase is configured. ·{' '}
+            <a href="/admin/settings" style={{ color: '#FFC400', fontWeight: 700 }}>
+              Settings →
+            </a>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

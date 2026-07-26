@@ -35,6 +35,7 @@ export default function Footer() {
           <FooterLink href="/franchise">Franchise</FooterLink>
           <FooterLink href="/admin">Staff login</FooterLink>
           <FooterLink href="/admin/reports">Reports</FooterLink>
+          <FooterLink href="/admin/settings">Settings</FooterLink>
         </FooterCol>
         <FooterCol title="LEGAL">
           <FooterLink href="/legal/terms">Terms</FooterLink>
