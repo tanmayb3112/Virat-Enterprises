@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { config } from "@/lib/config";
 import { GST_NUMBER } from "@/lib/data";
+import Logo from "@/components/Logo";
 
 export default function Footer() {
   return (
@@ -17,19 +18,9 @@ export default function Footer() {
         }}
       >
         <div>
-          <div
-            style={{
-              fontFamily: "var(--font-baloo), var(--font-jakarta), sans-serif",
-              fontWeight: 800,
-              fontSize: 19,
-              color: "#FFD200",
-              WebkitTextStroke: "0.4px #D8342A",
-            }}
-          >
-            विराट एंटरप्राइजेस
-          </div>
-          <div style={{ color: "#F2F0E9", fontWeight: 800, letterSpacing: ".16em", fontSize: 11, marginTop: 4 }}>
-            VIRAT ENTERPRISES · <span style={{ color: "#FF5A47" }}>नाम ही काफी है !</span>
+          <Logo height={62} />
+          <div style={{ color: "#F2F0E9", fontWeight: 800, letterSpacing: ".16em", fontSize: 11, marginTop: 10 }}>
+            VIRAT ENTERPRISES
           </div>
           <div style={{ fontSize: 13, marginTop: 10, lineHeight: 1.6, maxWidth: 280 }}>
             Printing, xerox, jumbo prints, binding, lamination and stationery. Six shops across Pune.
