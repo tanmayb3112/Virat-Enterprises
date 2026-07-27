@@ -107,7 +107,8 @@ export default function TermsPage() {
       <p style={p}>
         Prices are charged as per our published rate card, which may be updated from time to time.
         The rate applied to your order is the one in effect when the order is placed. A minimum order
-        value may apply. Where applicable, taxes are shown separately at checkout.
+        value may apply. Where applicable, taxes are shown separately at checkout. Virat Enterprises
+        is a GST-registered business — GSTIN 27AFRPM4220Q1ZT.
       </p>
 
       <h2 style={h2}>4. Payment</h2>

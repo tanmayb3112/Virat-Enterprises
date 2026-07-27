@@ -265,11 +265,29 @@ insert into rate_card (key, label, rate, unit) values
   ('a4_color', 'A4 Colour per side', 10, 'per_side'),
   ('a3_bw', 'A3 B/W per side', 5, 'per_side'),
   ('a3_color', 'A3 Colour per side', 20, 'per_side'),
+  -- Jumbo / large-format (owner rate card, Jul 2026)
+  ('a2_jumbo_bw', 'A2 Jumbo B/W', 30, 'per_side'),
+  ('a2_jumbo_color', 'A2 Jumbo Colour', 60, 'per_side'),
+  ('a1_jumbo_bw', 'A1 Jumbo B/W', 40, 'per_side'),
+  ('a1_jumbo_color', 'A1 Jumbo Colour', 80, 'per_side'),
+  ('a0_jumbo_bw', 'A0 Jumbo B/W', 60, 'per_side'),
+  ('a0_jumbo_color', 'A0 Jumbo Colour', 120, 'per_side'),
   ('gsm_100', '100 GSM surcharge per sheet', 1, 'per_sheet'),
   ('glossy', 'Glossy per sheet', 15, 'per_sheet'),
   ('spiral', 'Spiral binding', 40, 'flat'),
-  ('hard', 'Hard binding', 150, 'flat'),
+  ('hard', 'Blackbook binding', 150, 'flat'),
+  ('rexine', 'Rexine binding (premium)', 350, 'flat'),
   ('lamination_a4', 'Lamination per page (A4)', 20, 'per_sheet'),
+  -- Specialty (owner rate card, Jul 2026)
+  ('sticker_a4', 'A4 sticker print', 20, 'flat'),
+  ('sticker_1218', '12x18 sticker print', 40, 'flat'),
+  ('color_1218', '12x18 colour print', 40, 'flat'),
+  ('sticker_transparent', 'Transparent sticker A4', 40, 'flat'),
+  ('photo_a4', 'A4 photo print normal', 30, 'flat'),
+  ('photo_a4_glossy', 'A4 photo high glossy', 50, 'flat'),
+  ('passport_9', 'Passport photos x9', 25, 'flat'),
+  ('passport_30', 'Passport photos x30', 50, 'flat'),
+  ('smart_card', 'Smart card', 80, 'flat'),
   ('min_order', 'Minimum order', 20, 'flat')
 on conflict (key) do nothing;
 

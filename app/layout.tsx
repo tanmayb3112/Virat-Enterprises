@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, IBM_Plex_Mono, Baloo_2 } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
@@ -18,6 +18,15 @@ const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-plex-mono",
+  display: "swap",
+});
+
+// Rounded heavy Devanagari face for the brand lockup — closest web match to
+// the shop-board lettering (विराट एंटरप्राइजेस).
+const baloo = Baloo_2({
+  subsets: ["devanagari", "latin"],
+  weight: ["700", "800"],
+  variable: "--font-baloo",
   display: "swap",
 });
 
@@ -61,7 +70,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${plexMono.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${plexMono.variable} ${baloo.variable}`}>
       <body>
         {config.metaPixelId ? (
           <>

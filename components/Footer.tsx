@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { config } from "@/lib/config";
+import { GST_NUMBER } from "@/lib/data";
 
 export default function Footer() {
   return (
@@ -16,11 +17,25 @@ export default function Footer() {
         }}
       >
         <div>
-          <div style={{ color: "#F2F0E9", fontWeight: 800, letterSpacing: ".16em", fontSize: 13 }}>
-            VIRAT ENTERPRISES
+          <div
+            style={{
+              fontFamily: "var(--font-baloo), var(--font-jakarta), sans-serif",
+              fontWeight: 800,
+              fontSize: 19,
+              color: "#FFD200",
+              WebkitTextStroke: "0.4px #D8342A",
+            }}
+          >
+            विराट एंटरप्राइजेस
+          </div>
+          <div style={{ color: "#F2F0E9", fontWeight: 800, letterSpacing: ".16em", fontSize: 11, marginTop: 4 }}>
+            VIRAT ENTERPRISES · <span style={{ color: "#FF5A47" }}>नाम ही काफी है !</span>
           </div>
           <div style={{ fontSize: 13, marginTop: 10, lineHeight: 1.6, maxWidth: 280 }}>
-            Printing, xerox, binding, lamination and stationery. Six shops across Pune. Naam hi Kaafi hai.
+            Printing, xerox, jumbo prints, binding, lamination and stationery. Six shops across Pune.
+          </div>
+          <div className="mono" style={{ fontSize: 11.5, marginTop: 10, color: "#6E6B62" }}>
+            GST NO. {GST_NUMBER}
           </div>
         </div>
         <FooterCol title="ORDER">
