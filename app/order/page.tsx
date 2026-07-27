@@ -619,8 +619,19 @@ export default function OrderPage() {
           <div>
             {groupLabel("PAPER SIZE")}
             <div style={row}>
-              {(["A4", "A3", "A5", "Legal", "Letter"] as PaperSize[]).map((s) => (
-                <Chip key={s} label={s} selected={p.size === s} onClick={() => patchPrefs({ size: s })} />
+              {(
+                [
+                  ["A4", "A4"],
+                  ["A3", "A3"],
+                  ["A5", "A5"],
+                  ["Legal", "Legal"],
+                  ["Letter", "Letter"],
+                  ["A2", "A2 · Jumbo"],
+                  ["A1", "A1 · Jumbo"],
+                  ["A0", "A0 · Jumbo"],
+                ] as [PaperSize, string][]
+              ).map(([s, l]) => (
+                <Chip key={s} label={l} selected={p.size === s} onClick={() => patchPrefs({ size: s })} />
               ))}
             </div>
           </div>
@@ -795,7 +806,8 @@ export default function OrderPage() {
                     ["none", "None"],
                     ["staple", "Staple · free"],
                     ["spiral", "Spiral · ₹40"],
-                    ["hard", "Hard · ₹150"],
+                    ["hard", "Blackbook · ₹150"],
+                    ["rexine", "Rexine · ₹350"],
                   ] as [Binding, string][]
                 ).map(([v, l]) => (
                   <Chip key={v} label={l} selected={binding === v} onClick={() => setBinding(v)} />

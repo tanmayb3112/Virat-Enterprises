@@ -3,14 +3,18 @@
 // bill recomputation. In production the per-unit rates come from the admin-editable
 // `rate_card` table; the defaults below match the seeded rate card.
 
-export type PaperSize = "A4" | "A3" | "A5" | "Legal" | "Letter";
+export type PaperSize = "A4" | "A3" | "A5" | "Legal" | "Letter" | "A2" | "A1" | "A0";
 export type ColorMode = "bw" | "color";
 export type Sides = "single" | "double";
 export type Orientation = "portrait" | "landscape";
 export type Gsm = "70" | "80" | "100" | "glossy";
 export type Nup = 1 | 2 | 4;
-export type Binding = "none" | "staple" | "spiral" | "hard";
+export type Binding = "none" | "staple" | "spiral" | "hard" | "rexine";
 export type Lamination = "none" | "perpage";
+
+// Jumbo / large-format sizes are priced flat per side (owner's rate card);
+// GSM/glossy surcharges don't apply to them.
+export const JUMBO_SIZES: PaperSize[] = ["A2", "A1", "A0"];
 
 export interface FilePrefs {
   size: PaperSize;
@@ -69,8 +73,11 @@ export function pagesInRange(totalPages: number, range: string): number {
 }
 
 function perSideRate(prefs: FilePrefs, totalSides: number): number {
-  const isA3 = prefs.size === "A3";
-  if (isA3) return prefs.color === "color" ? 20 : 5;
+  // Jumbo rates from the owner's rate card (per side, flat).
+  if (prefs.size === "A0") return prefs.color === "color" ? 120 : 60;
+  if (prefs.size === "A1") return prefs.color === "color" ? 80 : 40;
+  if (prefs.size === "A2") return prefs.color === "color" ? 60 : 30;
+  if (prefs.size === "A3") return prefs.color === "color" ? 20 : 5;
   // A4-class (A4/A5/Legal/Letter)
   if (prefs.color === "color") return 10;
   return totalSides >= 100 ? 1.5 : 2;
@@ -95,17 +102,21 @@ export function computeFileCost(f: OrderFile): FileCost {
   const sheets = Math.ceil(sidesPerCopy / (f.prefs.sides === "double" ? 2 : 1)) * copies;
   const rate = perSideRate(f.prefs, totalSides);
   let surcharge = 0;
-  if (f.prefs.gsm === "100") surcharge = 1;
-  else if (f.prefs.gsm === "glossy") surcharge = 15;
+  if (!JUMBO_SIZES.includes(f.prefs.size)) {
+    if (f.prefs.gsm === "100") surcharge = 1;
+    else if (f.prefs.gsm === "glossy") surcharge = 15;
+  }
   const lineTotal = hasPages ? totalSides * rate + sheets * surcharge : 0;
   return { pages, sidesPerCopy, totalSides, sheets, rate, lineTotal, hasPages };
 }
 
+// Blackbook = the shop's standard hard binding; rexine = premium hard binding.
 export const BINDING_COST: Record<Binding, number> = {
   none: 0,
   staple: 0,
   spiral: 40,
   hard: 150,
+  rexine: 350,
 };
 
 export const LAMINATION_PER_SHEET = 20;
@@ -156,7 +167,9 @@ export function computeOrder(
 
   const bindingCost = BINDING_COST[binding];
   if (bindingCost > 0) {
-    lines.push({ label: `${cap(binding)} binding`, amount: bindingCost });
+    const bindingLabel =
+      binding === "hard" ? "Blackbook binding" : binding === "rexine" ? "Rexine binding" : `${cap(binding)} binding`;
+    lines.push({ label: bindingLabel, amount: bindingCost });
   }
 
   const laminationCost = lamination === "perpage" ? totalSheets * LAMINATION_PER_SHEET : 0;

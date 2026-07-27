@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BRANCHES } from "@/lib/data";
+import { BRANCHES, SPECIALTY_RATES } from "@/lib/data";
 import { config } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -261,8 +261,50 @@ export default function BranchesPage() {
         admin-editable table.
       </p>
 
+      {/* Full specialty rate list from the owner's counter card */}
+      <div style={{ marginTop: 64 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".2em", color: "#9A968A" }}>
+            SPECIALTY RATE LIST
+          </div>
+          <div style={{ fontSize: 13, color: "#9A968A" }}>Same rates at every branch</div>
+        </div>
+        <div
+          className="ve-rates-grid"
+          style={{
+            marginTop: 18,
+            display: "grid",
+            gridTemplateColumns: "repeat(2,minmax(0,1fr))",
+            gap: "0 48px",
+            borderTop: "1px solid #2E2E29",
+          }}
+        >
+          {SPECIALTY_RATES.map((r) => (
+            <div
+              key={r.key}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "13px 0",
+                borderBottom: "1px solid #26261F",
+                fontSize: 14,
+              }}
+            >
+              <div style={{ color: "#C9C6BC" }}>{r.label}</div>
+              <div style={{ fontWeight: 700, color: "#F2F0E9", whiteSpace: "nowrap" }}>{r.display}</div>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: 12.5, color: "#6E6B62", marginTop: 14, lineHeight: 1.6 }}>
+          Jumbo prints: A2 ₹30 / A1 ₹40 / A0 ₹60 (B/W) · A2 ₹60 / A1 ₹80 / A0 ₹120 (colour) — order them
+          online from the print wizard. Binding: spiral ₹40 · blackbook ₹150 · rexine (premium) ₹350.
+        </p>
+      </div>
+
       <style>{`@media(max-width:720px){
         .branches-grid{grid-template-columns:1fr !important;}
+        .ve-rates-grid{grid-template-columns:1fr !important;}
       }`}</style>
     </div>
   );

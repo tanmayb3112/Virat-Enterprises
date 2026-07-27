@@ -31,15 +31,29 @@ export default function LinksPage() {
     >
       <div
         style={{
-          fontSize: 15,
+          fontFamily: "var(--font-baloo), var(--font-jakarta), sans-serif",
+          fontSize: 30,
+          fontWeight: 800,
+          color: "#FFD200",
+          WebkitTextStroke: "0.6px #D8342A",
+        }}
+      >
+        विराट एंटरप्राइजेस
+      </div>
+      <div
+        style={{
+          fontSize: 12,
           fontWeight: 800,
           letterSpacing: "0.16em",
           color: "#F2F0E9",
+          marginTop: 6,
         }}
       >
         VIRAT ENTERPRISES
       </div>
-      <div style={{ fontSize: 15, color: "#9A968A", marginTop: 8 }}>Naam hi Kaafi hai</div>
+      <div style={{ fontFamily: "var(--font-baloo), var(--font-jakarta), sans-serif", fontSize: 15, fontWeight: 700, color: "#FF5A47", marginTop: 6 }}>
+        नाम ही काफी है !
+      </div>
       <div className="mono" style={{ fontSize: 12.5, color: "#6E6B62", marginTop: 10 }}>
         Printing &amp; Xerox · 6 shops in Pune
       </div>

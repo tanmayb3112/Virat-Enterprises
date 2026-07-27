@@ -98,20 +98,26 @@ export const BRANCHES: Branch[] = [
   },
 ];
 
+// From the shop board (owner-provided).
+export const GST_NUMBER = "27AFRPM4220Q1ZT";
+export const TAGLINE_HI = "नाम ही काफी है !";
+export const BRAND_HI = "विराट एंटरप्राइजेस";
+
 export interface Service {
   name: string;
   price: string;
 }
 
+// Services + prices from the owner's shop board and rate card (Jul 2026).
 export const SERVICES: Service[] = [
-  { name: "Xerox / photocopy", price: "from ₹2 per side" },
-  { name: "B/W printing", price: "₹2 per side · ₹1.50 for 100+" },
-  { name: "Colour printing", price: "A4 ₹10 · A3 ₹20 per side" },
-  { name: "Spiral & hard binding", price: "spiral ₹40 · hard ₹150" },
-  { name: "Lamination", price: "₹20 per A4 sheet" },
-  { name: "Scanning", price: "at the counter" },
-  { name: "Large-format / CAD", price: "quoted at branch" },
-  { name: "Stationery", price: "in store" },
+  { name: "Xerox & B/W printing", price: "₹2 per side · ₹1.50 for 100+" },
+  { name: "Colour & digital print", price: "A4 ₹10 · 12×18 ₹40" },
+  { name: "Jumbo B/W (A2·A1·A0)", price: "₹30 · ₹40 · ₹60 per print" },
+  { name: "Jumbo colour (A2·A1·A0)", price: "₹60 · ₹80 · ₹120 per print" },
+  { name: "Binding", price: "spiral ₹40 · blackbook ₹150 · rexine ₹350" },
+  { name: "Photo & passport prints", price: "A4 ₹30 · glossy ₹50 · 9 passport ₹25" },
+  { name: "Stickers & smart cards", price: "A4 ₹20 · transparent ₹40 · smart card ₹80" },
+  { name: "Lamination · scanning · toner", price: "₹20 per A4 · jumbo scanning · refills" },
 ];
 
 export interface RateRow {
@@ -124,9 +130,26 @@ export const RATE_CARD: RateRow[] = [
   { key: "a4_bw", label: "A4 · black & white", display: "₹2" },
   { key: "a4_bw_bulk", label: "A4 · B/W, 100+ sides", display: "₹1.50" },
   { key: "a4_color", label: "A4 · colour", display: "₹10" },
-  { key: "a3_color", label: "A3 · colour", display: "₹20" },
+  { key: "jumbo_a2", label: "A2 jumbo · B/W / colour", display: "₹30 / ₹60" },
+  { key: "jumbo_a1", label: "A1 jumbo · B/W / colour", display: "₹40 / ₹80" },
+  { key: "jumbo_a0", label: "A0 jumbo · B/W / colour", display: "₹60 / ₹120" },
   { key: "spiral", label: "Spiral binding", display: "₹40" },
-  { key: "hard", label: "Hard binding", display: "₹150" },
+  { key: "hard", label: "Blackbook binding", display: "₹150" },
+  { key: "rexine", label: "Rexine binding (premium)", display: "₹350" },
+];
+
+// Full specialty rate list from the owner's counter card — shown on /branches
+// and seeded into the admin-editable rate_card table.
+export const SPECIALTY_RATES: RateRow[] = [
+  { key: "sticker_a4", label: "A4 sticker print", display: "₹20" },
+  { key: "sticker_1218", label: "12×18 sticker print", display: "₹40" },
+  { key: "color_1218", label: "12×18 colour print", display: "₹40" },
+  { key: "sticker_transparent", label: "Transparent sticker A4", display: "₹40" },
+  { key: "photo_a4", label: "A4 photo print (normal)", display: "₹30" },
+  { key: "photo_a4_glossy", label: "A4 photo high glossy", display: "₹50" },
+  { key: "passport_9", label: "Passport photos · 9", display: "₹25" },
+  { key: "passport_30", label: "Passport photos · 30", display: "₹50" },
+  { key: "smart_card", label: "Smart card", display: "₹80" },
 ];
 
 // Franchise ROI calculator defaults (admin-editable `franchise_assumptions`).
