@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { config, modeLabel } from "@/lib/config";
+import Logo from "@/components/Logo";
 
 const NAV = [
   { href: "/", label: "Home", match: (p: string) => p === "/" },
@@ -38,36 +39,8 @@ export default function Header() {
           minWidth: 0,
         }}
       >
-        {/* Brand lockup recreated from the shop board: विराट एंटरप्राइजेस in
-            yellow with red outline + red tagline. Swap for the board image
-            file if the owner supplies a transparent PNG. */}
-        <Link href="/" aria-label="Virat Enterprises — home" style={{ flex: "none", whiteSpace: "nowrap", lineHeight: 1 }}>
-          <span
-            style={{
-              display: "block",
-              fontFamily: "var(--font-baloo), var(--font-jakarta), sans-serif",
-              fontWeight: 800,
-              fontSize: 20,
-              color: "#FFD200",
-              WebkitTextStroke: "0.5px #D8342A",
-              letterSpacing: ".01em",
-            }}
-          >
-            विराट एंटरप्राइजेस
-          </span>
-          <span
-            style={{
-              display: "block",
-              fontFamily: "var(--font-baloo), var(--font-jakarta), sans-serif",
-              fontWeight: 700,
-              fontSize: 10.5,
-              color: "#FF5A47",
-              marginTop: 1,
-              letterSpacing: ".06em",
-            }}
-          >
-            नाम ही काफी है !
-          </span>
+        <Link href="/" aria-label="Virat Enterprises — home" style={{ flex: "none", lineHeight: 0 }}>
+          <Logo height={46} tagline={false} />
         </Link>
 
         <nav
