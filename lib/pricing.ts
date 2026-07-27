@@ -91,6 +91,11 @@ export interface FileCost {
   rate: number;
   lineTotal: number;
   hasPages: boolean;
+  // What the rate is charged against. Owner's rule for A4-class B/W:
+  // single-sided → ₹2 per SIDE; double-sided → ₹2 per SHEET (both sides
+  // of one sheet cost the same ₹2). Everything else stays per side.
+  chargeUnit: "side" | "sheet";
+  chargedUnits: number;
 }
 
 export function computeFileCost(f: OrderFile): FileCost {
@@ -100,14 +105,24 @@ export function computeFileCost(f: OrderFile): FileCost {
   const sidesPerCopy = Math.ceil(pages / f.prefs.nup);
   const totalSides = sidesPerCopy * copies;
   const sheets = Math.ceil(sidesPerCopy / (f.prefs.sides === "double" ? 2 : 1)) * copies;
-  const rate = perSideRate(f.prefs, totalSides);
+
+  // Owner's rule: A4-class B/W double-sided is charged PER SHEET (₹2 covers
+  // both sides of a sheet); single-sided is charged per side. Colour, A3 and
+  // jumbo sizes remain per side.
+  const isA4ClassBw =
+    f.prefs.color === "bw" && !JUMBO_SIZES.includes(f.prefs.size) && f.prefs.size !== "A3";
+  const chargeUnit: "side" | "sheet" =
+    isA4ClassBw && f.prefs.sides === "double" ? "sheet" : "side";
+  const chargedUnits = chargeUnit === "sheet" ? sheets : totalSides;
+
+  const rate = perSideRate(f.prefs, chargedUnits);
   let surcharge = 0;
   if (!JUMBO_SIZES.includes(f.prefs.size)) {
     if (f.prefs.gsm === "100") surcharge = 1;
     else if (f.prefs.gsm === "glossy") surcharge = 15;
   }
-  const lineTotal = hasPages ? totalSides * rate + sheets * surcharge : 0;
-  return { pages, sidesPerCopy, totalSides, sheets, rate, lineTotal, hasPages };
+  const lineTotal = hasPages ? chargedUnits * rate + sheets * surcharge : 0;
+  return { pages, sidesPerCopy, totalSides, sheets, rate, lineTotal, hasPages, chargeUnit, chargedUnits };
 }
 
 // Blackbook = the shop's standard hard binding; rexine = premium hard binding.
@@ -158,9 +173,10 @@ export function computeOrder(
     filesWithPages += 1;
     totalSheets += c.sheets;
     filesTotal += c.lineTotal;
+    const unitWord = c.chargeUnit === "sheet" ? "sheets (2 sides each)" : "sides";
     const sideWord = f.prefs.sides === "double" ? "double" : "single";
     lines.push({
-      label: `${f.name} — ${c.totalSides} sides × ₹${c.rate} (${sideWord})`,
+      label: `${f.name} — ${c.chargedUnits} ${unitWord} × ₹${c.rate} (${sideWord})`,
       amount: c.lineTotal,
     });
   }
