@@ -56,7 +56,7 @@ export default function HomePage() {
           </div>
           <div style={{ marginTop: 56, display: "flex", gap: 0, borderTop: "1px solid #2E2E29", flexWrap: "wrap" }}>
             <Stat value="6" label="shops in Pune" first />
-            <Stat valueNode={<>₹2<span style={{ fontSize: 15, fontWeight: 600, color: "#9A968A" }}> /side</span></>} label="A4 black & white" />
+            <Stat valueNode={<>₹2<span style={{ fontSize: 15, fontWeight: 600, color: "#9A968A" }}> /side</span></>} label="A4 B/W · double side ₹2 per sheet" />
             <Stat value={radius} label={`free delivery over ${freeMin}`} />
           </div>
         </div>

@@ -110,7 +110,7 @@ export interface Service {
 
 // Services + prices from the owner's shop board and rate card (Jul 2026).
 export const SERVICES: Service[] = [
-  { name: "Xerox & B/W printing", price: "₹2 per side · ₹1.50 for 100+" },
+  { name: "Xerox & B/W printing", price: "₹2 single side · ₹2 per 2-side sheet" },
   { name: "Colour & digital print", price: "A4 ₹10 · 12×18 ₹40" },
   { name: "Jumbo B/W (A2·A1·A0)", price: "₹30 · ₹40 · ₹60 per print" },
   { name: "Jumbo colour (A2·A1·A0)", price: "₹60 · ₹80 · ₹120 per print" },
@@ -127,8 +127,9 @@ export interface RateRow {
 }
 
 export const RATE_CARD: RateRow[] = [
-  { key: "a4_bw", label: "A4 · black & white", display: "₹2" },
-  { key: "a4_bw_bulk", label: "A4 · B/W, 100+ sides", display: "₹1.50" },
+  { key: "a4_bw", label: "A4 · B/W single side (per side)", display: "₹2" },
+  { key: "a4_bw_double", label: "A4 · B/W double side (per sheet)", display: "₹2" },
+  { key: "a4_bw_bulk", label: "A4 · B/W, 100+ units", display: "₹1.50" },
   { key: "a4_color", label: "A4 · colour", display: "₹10" },
   { key: "jumbo_a2", label: "A2 jumbo · B/W / colour", display: "₹30 / ₹60" },
   { key: "jumbo_a1", label: "A1 jumbo · B/W / colour", display: "₹40 / ₹80" },

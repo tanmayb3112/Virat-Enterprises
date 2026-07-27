@@ -260,8 +260,9 @@ insert into branches (id, name, brand_name, address, phone, lat, lng, hours, upi
 on conflict (id) do nothing;
 
 insert into rate_card (key, label, rate, unit) values
-  ('a4_bw', 'A4 B/W per side (70 GSM)', 2, 'per_side'),
-  ('a4_bw_bulk', 'A4 B/W per side, 100+ sides', 1.5, 'per_side'),
+  ('a4_bw', 'A4 B/W single side (per side)', 2, 'per_side'),
+  ('a4_bw_double', 'A4 B/W double side (per sheet, 2 sides)', 2, 'per_sheet'),
+  ('a4_bw_bulk', 'A4 B/W bulk 100+ charged units', 1.5, 'per_unit'),
   ('a4_color', 'A4 Colour per side', 10, 'per_side'),
   ('a3_bw', 'A3 B/W per side', 5, 'per_side'),
   ('a3_color', 'A3 Colour per side', 20, 'per_side'),
