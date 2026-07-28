@@ -3,6 +3,7 @@
 import { useState, useRef, CSSProperties } from 'react';
 import { inr } from '@/lib/format';
 import { BRANCHES } from '@/lib/data';
+import AdminGate from '@/components/AdminGate';
 
 // ---------------------------------------------------------------------------
 // Staff orders dashboard — /admin
@@ -374,7 +375,7 @@ const BRANCH = BRANCHES.find((b) => b.id === 'mukund-nagar')!;
 const FREE_RADIUS_KM = 3;
 const FREE_MIN_ORDER = 500;
 
-export default function AdminDashboard() {
+function AdminOrdersInner() {
   const [staffFilter, setStaffFilter] = useState<'all' | Status>('all');
   const [expandedId, setExpandedId] = useState<string>(ORDERS[0].no);
   const [overrides, setOverrides] = useState<Record<string, Status>>({});
@@ -1070,5 +1071,13 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <AdminGate>
+      <AdminOrdersInner />
+    </AdminGate>
   );
 }

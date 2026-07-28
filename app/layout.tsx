@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { AuthProvider } from "@/lib/auth";
 import { config } from "@/lib/config";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -98,10 +99,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </noscript>
           </>
         ) : null}
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <Analytics />
+        <AuthProvider>
+          <Header />
+          <main>{children}</main>
+          <Footer />
+          <Analytics />
+        </AuthProvider>
       </body>
     </html>
   );

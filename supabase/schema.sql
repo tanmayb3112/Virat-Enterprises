@@ -248,6 +248,32 @@ create policy leads_staff on franchise_leads for select using (is_staff());
 -- dedicated RPC/edge function in production.
 
 -- =========================================================================
+-- Auth: auto-create a profile row on signup + self-service policies
+-- =========================================================================
+create or replace function handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into profiles (id, name)
+  values (new.id, coalesce(new.raw_user_meta_data->>'name', null))
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users
+  for each row execute function handle_new_user();
+
+-- Users may insert/update their own profile (fallback if the trigger missed).
+drop policy if exists profiles_insert on profiles;
+create policy profiles_insert on profiles for insert with check (id = auth.uid());
+
+-- Addresses: full CRUD on your own rows only.
+drop policy if exists addresses_own on addresses;
+create policy addresses_own on addresses for all
+  using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+
+-- =========================================================================
 -- Storage: print-files bucket (private, 25 MB/file cap)
 -- =========================================================================
 -- Customers upload their print files here at order time (folder = order
@@ -316,7 +342,8 @@ insert into franchise_assumptions (key, value) values
   ('year_growth_pct', 15)
 on conflict (key) do nothing;
 
--- Seed the admin allowlist with the owner email (edit as needed).
+-- Seed the admin allowlist with the owner emails (edit as needed).
 insert into allowed_staff_emails (email, role) values
-  ('tanmay.bhanushali@photonlegal.com', 'admin')
-on conflict (email) do nothing;
+  ('tanmay.bhanushali@photonlegal.com', 'admin'),
+  ('tanmaybhanushali151@gmail.com', 'admin')
+on conflict (email) do update set role = 'admin';

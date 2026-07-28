@@ -2,6 +2,7 @@
 
 import { useState, CSSProperties } from 'react';
 import { inr } from '@/lib/format';
+import AdminGate from '@/components/AdminGate';
 
 // ---------------------------------------------------------------------------
 // Daily report — /admin/reports
@@ -142,7 +143,7 @@ const RANGE_LABELS: Record<'today' | 'week' | 'month', string> = {
   month: 'This month',
 };
 
-export default function ReportsPage() {
+function ReportsInner() {
   const [reportDate, setReportDate] = useState('2026-07-26');
   const [reportRange, setReportRange] = useState<'today' | 'week' | 'month'>('today');
 
@@ -528,5 +529,13 @@ export default function ReportsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <AdminGate>
+      <ReportsInner />
+    </AdminGate>
   );
 }

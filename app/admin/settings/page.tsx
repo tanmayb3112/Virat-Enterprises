@@ -10,6 +10,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AdminGate from "@/components/AdminGate";
 
 interface BranchSetting {
   id: string;
@@ -42,7 +43,7 @@ const INPUT: React.CSSProperties = {
   fontSize: 13.5,
 };
 
-export default function AdminSettingsPage() {
+function AdminSettingsInner() {
   const [live, setLive] = useState(false);
   const [branches, setBranches] = useState<BranchSetting[]>([]);
   const [staff, setStaff] = useState<StaffEmail[]>([]);
@@ -286,5 +287,13 @@ export default function AdminSettingsPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <AdminGate>
+      <AdminSettingsInner />
+    </AdminGate>
   );
 }
