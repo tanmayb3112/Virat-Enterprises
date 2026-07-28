@@ -71,7 +71,13 @@ export default function LoginPage() {
     });
     setBusy(false);
     if (err) {
-      setError(err.message || "Could not send the code. Try again.");
+      console.error("signInWithOtp failed:", err);
+      const raw = (err.message ?? "").trim();
+      const useful = raw && raw !== "{}" && raw !== "[object Object]" ? raw : "";
+      setError(
+        useful ||
+          `Could not send the login email (code ${err.status ?? "unknown"}). This usually means the email (SMTP) settings in Supabase need attention — check Authentication → SMTP and the Auth logs.`
+      );
       return;
     }
     setEmail(addr);
