@@ -21,6 +21,27 @@ Auth: passwordless email OTP. Roles from `allowed_staff_emails` table (seeded: p
 
 Brand: SVG sticker-style Devanagari lockup `components/Logo.tsx` (विराट yellow + एंटरप्राइजेस white on red outline, Baloo 2 font). Owner may supply real PNG → swap in Logo.tsx (one line). GSTIN 27AFRPM4220Q1ZT in footer/terms. GST 18% NOT added to bills (assumed inclusive; owner hasn't confirmed otherwise).
 
+## UPDATE — 28 Jul 2026 (login 500)
+The login-error-surfacing commit **is merged to main**; owner then saw
+`Could not send the login email (code 500)`. A 500 out of `signInWithOtp` has two
+possible causes and the Supabase **Auth logs** are the only way to tell them apart:
+mailer failure ("Error sending magic link email") vs the signup DB trigger
+("Database error saving new user" → re-run `supabase/schema.sql`).
+
+Rather than depend on Supabase's SMTP, login codes are now **sent by the site
+itself**: `POST /api/auth/send-code` mints the 6-digit code with the service-role
+key (`admin.createUser` + `admin.generateLink`, neither of which sends mail) and
+delivers it via Resend (`sendLoginCode` in `lib/notify.ts`). The browser still
+calls `verifyOtp`, so sessions/roles/RLS are untouched. Requires
+`SUPABASE_SERVICE_ROLE_KEY` + `RESEND_API_KEY`; without both the route answers
+`{fallback:true}` and `/login` reverts to Supabase's mailer. Failures name their
+stage (`create_user` = trigger broken, `generate_code`, `send_email`), so the
+error text on the login page now identifies the cause by itself.
+`GET /api/auth/send-code` reports which env vars are present (booleans only) —
+use it to confirm a deploy picked up the keys.
+Note: Resend's default `onboarding@resend.dev` sender only delivers to the Resend
+account's own address; set `RESEND_FROM` on a verified domain for customer logins.
+
 ## CURRENT STATE / IN-FLIGHT (most important)
 Owner is mid-launch, connecting Supabase. Timeline of debugging:
 1. Owner created Supabase project, ran schema.sql (possibly needs RE-RUN for auth trigger + latest seeds — told to re-run; unconfirmed).
