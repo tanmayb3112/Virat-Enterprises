@@ -65,6 +65,49 @@ export async function sendOrderEmail(o: OrderEmail): Promise<{ sent: boolean; re
   }
 }
 
+// Login codes (see app/api/auth/send-code/route.ts). Sent through the same
+// Resend account as order mail so signing in does not depend on Supabase's
+// own SMTP settings.
+export async function sendLoginCode(o: {
+  to: string;
+  code: string;
+}): Promise<{ sent: boolean; reason?: string }> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return { sent: false, reason: "no_resend_key" };
+
+  const from = process.env.RESEND_FROM ?? "Virat Enterprises <onboarding@resend.dev>";
+  const body = [
+    `Your Virat Enterprises login code is:`,
+    ``,
+    o.code,
+    ``,
+    `Enter it on the login page to sign in. It expires shortly.`,
+    `If you did not ask for this code, ignore this email.`,
+  ].join("\n");
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from,
+        to: [o.to],
+        subject: `${o.code} is your Virat Enterprises login code`,
+        text: body,
+      }),
+    });
+    if (!res.ok) {
+      // Resend explains refusals (unverified sender, sandbox recipient limits)
+      // in the body — pass it through so the login page can show it.
+      const detail = await res.text().catch(() => "");
+      return { sent: false, reason: `resend_${res.status}${detail ? `: ${detail.slice(0, 300)}` : ""}` };
+    }
+    return { sent: true };
+  } catch (e) {
+    return { sent: false, reason: String(e) };
+  }
+}
+
 export function adminEmails(): string[] {
   return (process.env.ADMIN_EMAILS ?? "")
     .split(",")

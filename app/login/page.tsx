@@ -65,6 +65,33 @@ export default function LoginPage() {
       return;
     }
     setBusy(true);
+
+    // Preferred path: we mint and email the code ourselves (Resend), so a
+    // misconfigured Supabase SMTP setup cannot block logins. The route answers
+    // { fallback: true } when it is not fully configured.
+    try {
+      const res = await fetch("/api/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: addr }),
+      });
+      const out = await res.json().catch(() => null);
+      if (out?.ok) {
+        setBusy(false);
+        setEmail(addr);
+        setCode("");
+        setStep("code");
+        return;
+      }
+      if (out && !out.fallback) {
+        setBusy(false);
+        setError(out.error || "Could not send the login code. Please try again.");
+        return;
+      }
+    } catch {
+      // Route unreachable — try Supabase's own mailer below.
+    }
+
     const { error: err } = await supabase.auth.signInWithOtp({
       email: addr,
       options: { shouldCreateUser: true },
@@ -76,7 +103,7 @@ export default function LoginPage() {
       const useful = raw && raw !== "{}" && raw !== "[object Object]" ? raw : "";
       setError(
         useful ||
-          `Could not send the login email (code ${err.status ?? "unknown"}). This usually means the email (SMTP) settings in Supabase need attention — check Authentication → SMTP and the Auth logs.`
+          `Could not send the login email (code ${err.status ?? "unknown"}). Supabase's mailer rejected it — either fix Authentication → SMTP (see the Auth logs for the reason), or set RESEND_API_KEY in Vercel so the site sends login codes itself.`
       );
       return;
     }
