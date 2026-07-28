@@ -128,6 +128,9 @@ export async function POST(req: NextRequest) {
       guest_email: body.custEmail ?? null,
       utm: body.utm ?? null,
       items: body.items,
+      // Finishing is what the shop floor actually needs off the job ticket.
+      binding: body.binding ?? null,
+      lamination: body.lamination ?? null,
     });
     if (error) {
       // Table may not exist yet — still let the customer complete via WhatsApp.
