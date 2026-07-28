@@ -44,11 +44,27 @@ export async function GET(req: NextRequest) {
   }
   const { supabase, staff } = ctx;
 
+  // Reports ask for a calendar range; the dashboard asks for the recent queue.
+  //
+  // from/to are preferably full ISO instants, because "a day" is a local-time
+  // question and the shop is at UTC+5:30 — resolving a bare date against UTC
+  // would push orders placed before 5:30am into the previous day's report. The
+  // reports page therefore sends instants computed from local midnight. A bare
+  // YYYY-MM-DD is still accepted (hand-run queries) and read as a UTC day.
+  const { searchParams } = req.nextUrl;
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const limitParam = Number(searchParams.get("limit"));
+  const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 2000) : 200;
+
   let q = supabase
     .from("orders")
     .select(SELECT)
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(limit);
+
+  if (from) q = q.gte("created_at", from.includes("T") ? from : `${from}T00:00:00.000Z`);
+  if (to) q = q.lte("created_at", to.includes("T") ? to : `${to}T23:59:59.999Z`);
 
   // Pinned staff see only their branches; admins and unpinned staff see all.
   if (staff.role !== "admin" && staff.branchIds.length > 0) {

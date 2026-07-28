@@ -3,7 +3,16 @@
 import { useState, useRef, useEffect, useCallback, useMemo, CSSProperties } from 'react';
 import { inr } from '@/lib/format';
 import { BRANCHES } from '@/lib/data';
-import { computeFileCost, FilePrefs, defaultPrefs, OrderFile } from '@/lib/pricing';
+import { computeFileCost } from '@/lib/pricing';
+import {
+  DbOrder,
+  OFFICE_EXT,
+  extOf,
+  toOrderFile,
+  describePrefs,
+  accessToken,
+  fetchOrders,
+} from '@/lib/orders';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth';
 import AdminGate from '@/components/AdminGate';
@@ -35,54 +44,6 @@ const FLOW: Status[] = [
   'OUT_FOR_DELIVERY',
   'COMPLETED',
 ];
-
-// --- what the API returns ---------------------------------------------------
-interface DbItem {
-  file_name?: string;
-  page_count?: number;
-  prefs?: Partial<FilePrefs>;
-  line_total?: number;
-}
-interface DbEvent {
-  status: string | null;
-  note: string | null;
-  actor: string | null;
-  created_at: string;
-}
-interface DbDelivery {
-  vendor: string | null;
-  tracking_id: string | null;
-  courier_fee: number | null;
-  booked_at: string | null;
-  delivered_at: string | null;
-}
-interface DbOrder {
-  id: string;
-  order_no: string;
-  token: string;
-  status: string;
-  total: number | null;
-  subtotal: number | null;
-  delivery_type: 'pickup' | 'delivery' | null;
-  address: Record<string, unknown> | null;
-  distance_km: number | null;
-  delivery_fee_rule: string | null;
-  payment_mode: string | null;
-  payment_status: string | null;
-  utr_reference: string | null;
-  guest_name: string | null;
-  guest_phone: string | null;
-  guest_email: string | null;
-  branch_id: string | null;
-  binding: string | null;
-  lamination: string | null;
-  items: DbItem[] | null;
-  utm: Record<string, string> | null;
-  created_at: string;
-  completed_at: string | null;
-  order_events: DbEvent[] | null;
-  deliveries: DbDelivery[] | null;
-}
 
 // --- the view model the markup below renders --------------------------------
 interface FileItem {
@@ -147,38 +108,8 @@ function stamp(iso: string): string {
   });
 }
 
-const OFFICE_EXT = ['DOC', 'DOCX', 'XLS', 'XLSX', 'PPT', 'PPTX', 'ODT'];
-
-function extOf(name: string): string {
-  const bit = name.split('.').pop() ?? '';
-  return bit.toUpperCase().slice(0, 4);
-}
-
 function asStatus(s: string): Status {
   return (FLOW as string[]).includes(s) || s === 'CANCELLED' ? (s as Status) : 'RECEIVED';
-}
-
-// Rebuilds an OrderFile so the shared pricing engine can be reused for sheet
-// counts and repricing, rather than duplicating the arithmetic here.
-function toOrderFile(it: DbItem, pagesOverride?: number): OrderFile {
-  const prefs: FilePrefs = { ...defaultPrefs(), ...(it.prefs ?? {}) };
-  return {
-    id: it.file_name ?? 'file',
-    name: it.file_name ?? 'file',
-    ext: extOf(it.file_name ?? ''),
-    kind: 'pdf',
-    pages: pagesOverride ?? it.page_count ?? 0,
-    prefs,
-  };
-}
-
-function describe(prefs: FilePrefs): string {
-  const colour = prefs.color === 'bw' ? 'B/W' : 'Colour';
-  const gsm = prefs.gsm === 'glossy' ? 'Glossy' : `${prefs.gsm} GSM`;
-  const sides = prefs.sides === 'double' ? 'Double-sided' : 'Single-sided';
-  const nup = prefs.nup > 1 ? ` · ${prefs.nup}-up` : '';
-  const copies = `${prefs.copies} ${prefs.copies === 1 ? 'copy' : 'copies'}`;
-  return `${prefs.size} · ${colour} · ${sides} · ${gsm}${nup} · ${copies}`;
 }
 
 function addressLine(o: DbOrder, branchLabel: string): string {
@@ -234,7 +165,7 @@ function toView(o: DbOrder): Order {
     return {
       file: name,
       ext,
-      spec: describe(of.prefs),
+      spec: describePrefs(of.prefs),
       pagesLine: cost.hasPages
         ? `${cost.pages} pages → ${cost.totalSides} sides, ${cost.sheets} sheets`
         : 'Page count not known yet — verify',
@@ -410,13 +341,6 @@ const FILTERS: { key: 'all' | Status; label: string }[] = [
 const FREE_RADIUS_KM = 3;
 const FREE_MIN_ORDER = 500;
 
-async function accessToken(): Promise<string | null> {
-  const supabase = getSupabaseBrowser();
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
-}
-
 function AdminOrdersInner() {
   const { user, live } = useAuth();
 
@@ -440,33 +364,13 @@ function AdminOrdersInner() {
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
-    const token = await accessToken();
-    if (!token) {
-      setLoadError('Not signed in — reload the page and log in again.');
-      setLoading(false);
-      return;
+    const res = await fetchOrders();
+    setLoadError(res.error);
+    if (res.ok) {
+      setRows(res.orders);
+      setLastSync(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
     }
-    try {
-      const res = await fetch('/api/admin/orders', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const out = await res.json();
-      if (!out.ok) {
-        setLoadError(
-          out.error === 'not_staff'
-            ? 'This account is not on the staff list. Add it in Settings.'
-            : `Could not load orders: ${out.error ?? res.status}`
-        );
-      } else {
-        setRows(out.orders as DbOrder[]);
-        setLoadError('');
-        setLastSync(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
-      }
-    } catch (e) {
-      setLoadError(`Could not reach the server (${String(e)}).`);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(false);
   }, []);
 
   useEffect(() => {

@@ -85,8 +85,30 @@ the dashboard does not depend on RLS matching the allowlist.
 3. New policies: `events_read`, `deliveries_staff`. `orders` added to the
    `supabase_realtime` publication (fails soft — polling covers it).
 
-**Still mock: `/admin/reports`** (541 lines of hard-coded metrics). It can now
-aggregate from the same `/api/admin/orders` payload — that is the next task.
+## LIVE REPORTS (`/admin/reports`) — also built
+Every figure derives from the real orders in the selected range, so the metric
+strip, per-branch bars, service split and table always reconcile.
+- Definitions: **received = `payment_status = 'paid'`** (a human pressed Verify
+  payment). **Billed excludes cancelled**; cancelled value is shown as reversed.
+  Gap = billed − received.
+- Day / Week / Month off an anchor date. Weeks run **Monday–Sunday**. Verified
+  against leap years, month ends and year-crossing weeks.
+- **Timezone:** a report day is a day *at the shop*. The page sends ISO instants
+  computed from local midnight and the API uses them verbatim (bare YYYY-MM-DD
+  still accepted, read as UTC). Filtering a bare date against UTC would have
+  pushed pre-5:30am orders into the previous day.
+- Top services derive per file from its own prefs (jumbo/A3 → large-format,
+  else colour/BW), plus `BINDING_COST` and `LAMINATION_PER_SHEET` per order.
+- Mismatches are generated: refunds due (paid then cancelled) first, then
+  unverified money biggest-first, with the UTR to look for.
+- CSV export writes the real rows for the range.
+- `GET /api/admin/orders` now takes `from` / `to` / `limit` (max 2000).
+
+**Shared code:** `lib/orders.ts` holds the DB row types, `toOrderFile`,
+`describePrefs`, `jobSummary`, `serviceOf`, `accessToken` and `fetchOrders` —
+both admin screens consume the same payload, so these must not be duplicated.
+
+**No mock data remains anywhere in the app.**
 
 ## CURRENT STATE / IN-FLIGHT (most important)
 Owner is mid-launch, connecting Supabase. Timeline of debugging:

@@ -1,14 +1,34 @@
 'use client';
 
-import { useState, CSSProperties } from 'react';
+import { useState, useEffect, useCallback, useMemo, CSSProperties } from 'react';
 import { inr } from '@/lib/format';
+import { BRANCHES } from '@/lib/data';
+import { computeFileCost, BINDING_COST, LAMINATION_PER_SHEET, Binding } from '@/lib/pricing';
+import {
+  DbOrder,
+  fetchOrders,
+  isPaid,
+  isCancelled,
+  orderTotal,
+  sheetsIn,
+  serviceOf,
+  jobSummary,
+  toOrderFile,
+  ServiceKey,
+} from '@/lib/orders';
+import { useAuth } from '@/lib/auth';
 import AdminGate from '@/components/AdminGate';
 
 // ---------------------------------------------------------------------------
 // Daily report — /admin/reports
-// DEMO PAGE: figures below are computed from a realistic hard-coded orders
-// array. In production these rows come from Supabase and the end-of-day
-// summary emails are sent via a cron job.
+// LIVE: every figure is derived from the real orders in the selected date range
+// (same /api/admin/orders payload the dashboard uses), so the metric strip, the
+// per-branch bars, the service split and the table always reconcile with each
+// other and with the queue.
+//
+// "Received" means payment_status = 'paid', i.e. a human pressed Verify payment
+// after finding the money. Billed excludes cancelled orders; cancelled value is
+// reported separately as reversed.
 // ---------------------------------------------------------------------------
 
 type Status =
@@ -36,7 +56,7 @@ const PILL_MAP: Record<Status, [string, string]> = {
   CANCELLED: ['#331717', '#F09A9A'],
 };
 function pill(status: Status): CSSProperties {
-  const [bg, color] = PILL_MAP[status];
+  const [bg, color] = PILL_MAP[status] ?? PILL_MAP.RECEIVED;
   return {
     background: bg,
     color,
@@ -74,129 +94,223 @@ function smallChip(active: boolean): CSSProperties {
       };
 }
 
-interface ReportRow {
-  time: string;
-  no: string;
-  branch: string;
-  job: string;
-  billed: number;
-  received: number;
-  fee: number;
-  status: Status;
-}
+type Range = 'today' | 'week' | 'month';
 
-const REPORT_ROWS: ReportRow[] = [
-  { time: '10:12', no: 'VE-MUK-202607-0142', branch: 'Mukund Nagar', job: 'Assignment 24 pp A4 colour ×2 + colour cover, spiral', billed: 542, received: 542, fee: 0, status: 'PAID' },
-  { time: '10:05', no: 'VE-MUK-202607-0141', branch: 'Mukund Nagar', job: 'Report ~120 pp A4 B/W ×3, hard binding', billed: 1240, received: 0, fee: 0, status: 'PAYMENT_PENDING_VERIFICATION' },
-  { time: '9:52', no: 'VE-ABC-202607-0088', branch: 'ABC Chowk', job: 'Notes 340 pp A4 B/W ×1, spiral', billed: 730, received: 730, fee: 0, status: 'COMPLETED' },
-  { time: '9:38', no: 'VE-MUK-202607-0140', branch: 'Mukund Nagar', job: 'A3 glossy poster ×8', billed: 320, received: 320, fee: 0, status: 'PRINTING' },
-  { time: '9:21', no: 'VE-JMR-202607-0054', branch: 'JM Road', job: 'CAD sheets A3 ×12', billed: 1560, received: 0, fee: 0, status: 'CANCELLED' },
-  { time: '9:04', no: 'VE-ABC-202607-0087', branch: 'ABC Chowk', job: 'Colour brochure A4 ×50', billed: 990, received: 990, fee: 45, status: 'OUT_FOR_DELIVERY' },
-  { time: '8:56', no: 'VE-SAT-202607-0031', branch: 'Satara Road', job: 'Lamination 22 pages + xerox 60 pp', billed: 640, received: 640, fee: 0, status: 'COMPLETED' },
-  { time: '8:42', no: 'VE-SHN-202607-0019', branch: 'Shanti Nagar', job: 'Wedding cards colour ×120', billed: 280, received: 0, fee: 0, status: 'PAYMENT_PENDING_VERIFICATION' },
-  { time: '8:33', no: 'VE-PUN-202607-0022', branch: 'Pune Corporation', job: 'Tender booklet 84 pp ×6, spiral', billed: 1180, received: 1180, fee: 60, status: 'COMPLETED' },
-  { time: '8:20', no: 'VE-MUK-202607-0138', branch: 'Mukund Nagar', job: 'Thesis 186 pp ×4 + colour plates', billed: 2650, received: 2650, fee: 0, status: 'OUT_FOR_DELIVERY' },
-];
-
-interface BranchStat {
-  name: string;
-  billed: number;
-  received: number;
-}
-// Derived from REPORT_ROWS so every widget on this screen reconciles exactly.
-const BRANCH_STATS: BranchStat[] = Array.from(
-  REPORT_ROWS.reduce((m, r) => {
-    const cur = m.get(r.branch) ?? { name: r.branch, billed: 0, received: 0 };
-    cur.billed += r.billed;
-    cur.received += r.received;
-    return m.set(r.branch, cur);
-  }, new Map<string, BranchStat>()).values()
-).sort((a, b) => b.billed - a.billed);
-
-// Plausible split of today's billed total (sums to the metric strip exactly).
-const TOP_SERVICES: { name: string; amount: number }[] = [
-  { name: 'B/W printing (A4)', amount: 4420 },
-  { name: 'Colour printing', amount: 3286 },
-  { name: 'Binding & finishing', amount: 1180 },
-  { name: 'Large-format / CAD', amount: 780 },
-  { name: 'Lamination', amount: 466 },
-];
-
-const MISMATCHES: { title: string; body: string }[] = [
-  {
-    title: 'JM Road — gap ' + inr(1560),
-    body: 'VE-JMR-202607-0054 cancelled after printing; refund needed.',
-  },
-  {
-    title: 'Mukund Nagar — gap ' + inr(1240),
-    body: 'VE-MUK-202607-0141 UTR submitted at 10:05 — verify in the bank app.',
-  },
-  {
-    title: 'Shanti Nagar — gap ' + inr(280),
-    body: 'UPI reference submitted but not found in bank statement.',
-  },
-];
-
-const RANGE_LABELS: Record<'today' | 'week' | 'month', string> = {
-  today: 'Today',
+const RANGE_LABELS: Record<Range, string> = {
+  today: 'Day',
   week: 'This week',
   month: 'This month',
 };
 
-function ReportsInner() {
-  const [reportDate, setReportDate] = useState('2026-07-26');
-  const [reportRange, setReportRange] = useState<'today' | 'week' | 'month'>('today');
+function iso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate()
+  ).padStart(2, '0')}`;
+}
 
-  const rangeChips: { key: 'today' | 'week' | 'month'; label: string }[] = [
+// The anchor date plus a range gives the inclusive window the API filters on.
+// Weeks run Monday to Sunday, which is how the shop counts them.
+function windowFor(anchor: string, range: Range): { from: string; to: string } {
+  const d = new Date(`${anchor}T12:00:00`);
+  if (range === 'today') return { from: anchor, to: anchor };
+  if (range === 'week') {
+    const dow = (d.getDay() + 6) % 7; // Monday = 0
+    const start = new Date(d);
+    start.setDate(d.getDate() - dow);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return { from: iso(start), to: iso(end) };
+  }
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  return { from: iso(start), to: iso(end) };
+}
+
+// A report day is a day at the shop, not a UTC day. These turn the local
+// calendar boundaries into the instants the API filters created_at on, so an
+// order placed at 1am IST lands in that morning's report rather than
+// yesterday's.
+function dayStartInstant(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(y, m - 1, d, 0, 0, 0, 0).toISOString();
+}
+function dayEndInstant(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(y, m - 1, d, 23, 59, 59, 999).toISOString();
+}
+
+function branchName(id: string | null): string {
+  return BRANCHES.find((b) => b.id === id)?.name ?? (id ?? 'Unassigned');
+}
+
+function clockTime(isoStamp: string): string {
+  return new Date(isoStamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function ReportsInner() {
+  const { live } = useAuth();
+  const [reportDate, setReportDate] = useState(() => iso(new Date()));
+  const [reportRange, setReportRange] = useState<Range>('today');
+  const [rows, setRows] = useState<DbOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  const { from, to } = useMemo(() => windowFor(reportDate, reportRange), [reportDate, reportRange]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetchOrders({
+      from: dayStartInstant(from),
+      to: dayEndInstant(to),
+      limit: 2000,
+    });
+    setRows(res.orders);
+    setLoadError(res.error);
+    setLoading(false);
+  }, [from, to]);
+
+  useEffect(() => {
+    if (!live) {
+      setLoading(false);
+      return;
+    }
+    load();
+  }, [live, load]);
+
+  const rangeChips: { key: Range; label: string }[] = [
     { key: 'today', label: 'Day' },
     { key: 'week', label: 'Week' },
     { key: 'month', label: 'Month' },
   ];
 
-  // --- metrics computed from the mock orders array -------------------------
-  const ordersCount = REPORT_ROWS.length;
-  const billedTotal = REPORT_ROWS.reduce((a, r) => a + r.billed, 0);
-  const receivedTotal = REPORT_ROWS.reduce((a, r) => a + r.received, 0);
+  // --- every figure below is derived from `rows` ---------------------------
+  const live_ = rows.filter((r) => !isCancelled(r));
+  const cancelled = rows.filter(isCancelled);
+
+  const ordersCount = rows.length;
+  const billedTotal = live_.reduce((a, r) => a + orderTotal(r), 0);
+  const receivedTotal = live_.filter(isPaid).reduce((a, r) => a + orderTotal(r), 0);
   const gapTotal = billedTotal - receivedTotal;
-  const deliveryFees = REPORT_ROWS.reduce((a, r) => a + r.fee, 0);
-  const cancelledCount = REPORT_ROWS.filter((r) => r.status === 'CANCELLED').length;
-  const toChase = REPORT_ROWS.filter((r) => r.received < r.billed && r.status !== 'CANCELLED').length;
+  const reversedTotal = cancelled.reduce((a, r) => a + orderTotal(r), 0);
+  const deliveryFees = rows.reduce(
+    (a, r) => a + (r.deliveries ?? []).reduce((n, d) => n + Number(d.courier_fee ?? 0), 0),
+    0
+  );
+  const toChase = live_.filter((r) => !isPaid(r)).length;
+  const branchCount = new Set(rows.map((r) => r.branch_id)).size;
 
   const metrics: { label: string; value: string; sub: string; color?: string }[] = [
-    { label: 'ORDERS', value: String(ordersCount), sub: `${new Set(REPORT_ROWS.map((r) => r.branch)).size} branches` },
-    { label: 'BILLED', value: inr(billedTotal), sub: 'all jobs raised' },
-    { label: 'RECEIVED', value: inr(receivedTotal), sub: 'Razorpay + verified UPI', color: '#6FCF8E' },
-    { label: 'GAP', value: inr(gapTotal), sub: `${toChase} orders to chase`, color: '#F08A8A' },
+    {
+      label: 'ORDERS',
+      value: String(ordersCount),
+      sub: `${branchCount} branch${branchCount === 1 ? '' : 'es'}`,
+    },
+    { label: 'BILLED', value: inr(billedTotal), sub: 'excludes cancelled' },
+    { label: 'RECEIVED', value: inr(receivedTotal), sub: 'verified payments', color: '#6FCF8E' },
+    {
+      label: 'GAP',
+      value: inr(gapTotal),
+      sub: `${toChase} order${toChase === 1 ? '' : 's'} to chase`,
+      color: gapTotal > 0 ? '#F08A8A' : '#6FCF8E',
+    },
     { label: 'DELIVERY FEES', value: inr(deliveryFees), sub: 'courier fees paid' },
-    { label: 'CANCELLED', value: String(cancelledCount), sub: inr(1560) + ' reversed' },
+    { label: 'CANCELLED', value: String(cancelled.length), sub: inr(reversedTotal) + ' reversed' },
   ];
 
-  const maxB = Math.max(...BRANCH_STATS.map((x) => Math.max(x.billed, x.received)));
-  const maxSvc = Math.max(...TOP_SERVICES.map((x) => x.amount));
+  // Per branch: billed vs received, biggest first.
+  const branchStats = useMemo(() => {
+    const m = new Map<string, { name: string; billed: number; received: number }>();
+    for (const r of live_) {
+      const name = branchName(r.branch_id);
+      const cur = m.get(name) ?? { name, billed: 0, received: 0 };
+      cur.billed += orderTotal(r);
+      if (isPaid(r)) cur.received += orderTotal(r);
+      m.set(name, cur);
+    }
+    return Array.from(m.values()).sort((a, b) => b.billed - a.billed);
+  }, [live_]);
 
+  // Top services: printing split by rate-card line from each file's own prefs,
+  // plus binding and lamination priced from the shared engine.
+  const topServices = useMemo(() => {
+    const m = new Map<ServiceKey, number>();
+    const add = (k: ServiceKey, amount: number) => m.set(k, (m.get(k) ?? 0) + amount);
+    for (const r of live_) {
+      for (const it of r.items ?? []) {
+        const cost = computeFileCost(toOrderFile(it));
+        add(serviceOf(it), Number(it.line_total ?? cost.lineTotal));
+      }
+      const b = (r.binding ?? 'none') as Binding;
+      if (b !== 'none' && BINDING_COST[b]) add('Binding & finishing', BINDING_COST[b]);
+      if (r.lamination === 'perpage') add('Lamination', sheetsIn(r) * LAMINATION_PER_SHEET);
+    }
+    return Array.from(m.entries())
+      .map(([name, amount]) => ({ name, amount: Math.round(amount) }))
+      .filter((s) => s.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+  }, [live_]);
+
+  // Mismatches: unverified money first, then cancellations that took payment.
+  const mismatches = useMemo(() => {
+    const unpaid = live_
+      .filter((r) => !isPaid(r))
+      .sort((a, b) => orderTotal(b) - orderTotal(a))
+      .map((r) => ({
+        title: `${branchName(r.branch_id)} — gap ${inr(orderTotal(r))}`,
+        body: r.utr_reference
+          ? `${r.order_no} — UTR ${r.utr_reference} submitted, verify in the bank app.`
+          : `${r.order_no} — no payment reference submitted yet.`,
+      }));
+    const refunds = cancelled
+      .filter(isPaid)
+      .map((r) => ({
+        title: `${branchName(r.branch_id)} — refund ${inr(orderTotal(r))}`,
+        body: `${r.order_no} was paid then cancelled — refund due.`,
+      }));
+    return [...refunds, ...unpaid].slice(0, 8);
+  }, [live_, cancelled]);
+
+  const maxB = Math.max(1, ...branchStats.map((x) => Math.max(x.billed, x.received)));
+  const maxSvc = Math.max(1, ...topServices.map((x) => x.amount));
   const rangeLabel = RANGE_LABELS[reportRange];
 
   const exportCsv = () => {
-    const header = ['time', 'order', 'branch', 'job', 'billed', 'received', 'status'];
-    const rows = [header].concat(
-      REPORT_ROWS.map((r) => [
-        r.time,
-        r.no,
-        r.branch,
-        '"' + r.job.replace(/"/g, '""') + '"',
-        String(r.billed),
-        String(r.received),
-        r.status,
-      ]),
-    );
-    const csv = rows.map((r) => r.join(',')).join('\n');
+    const header = ['time', 'date', 'order', 'branch', 'job', 'billed', 'received', 'status'];
+    const body = rows.map((r) => [
+      clockTime(r.created_at),
+      r.created_at.slice(0, 10),
+      r.order_no,
+      branchName(r.branch_id),
+      '"' + jobSummary(r).replace(/"/g, '""') + '"',
+      String(orderTotal(r)),
+      String(isPaid(r) ? orderTotal(r) : 0),
+      r.status,
+    ]);
+    const csv = [header, ...body].map((r) => r.join(',')).join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'virat-report-' + reportDate + '.csv';
+    a.download = `virat-report-${from}${from === to ? '' : `-to-${to}`}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  if (!live) {
+    return (
+      <div style={{ maxWidth: 620, margin: '0 auto', padding: '64px 24px 120px' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
+          REPORTS
+        </div>
+        <h1 style={{ fontSize: 30, fontWeight: 800, color: '#F2F0E9', margin: '12px 0' }}>
+          Database not connected
+        </h1>
+        <p style={{ fontSize: 14.5, lineHeight: 1.7, color: '#C9C6BC' }}>
+          Reports are computed from real orders. Add the Supabase environment variables in
+          Vercel and redeploy to activate them.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -230,10 +344,29 @@ function ReportsInner() {
             Billed vs received
           </h1>
           <div style={{ fontSize: '13px', color: '#9A968A', marginTop: '5px' }}>
-            Per-branch and all-branch — end-of-day summary emails via cron in production.
+            {from === to ? from : `${from} → ${to}`} · {ordersCount} order
+            {ordersCount === 1 ? '' : 's'} · received = payments staff have verified
           </div>
           <div style={{ fontSize: '12px', color: '#6E6B62', marginTop: '4px' }}>
-            Demo data — figures update live once Supabase is configured.
+            <button
+              onClick={load}
+              style={{
+                background: 'none',
+                border: 0,
+                padding: 0,
+                color: '#FFC400',
+                fontWeight: 700,
+                fontSize: '12px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Refresh
+            </button>
+            {' · '}
+            <a href="/admin" style={{ color: '#FFC400', fontWeight: 700 }}>
+              ← Orders queue
+            </a>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -258,6 +391,7 @@ function ReportsInner() {
           <button
             className="h-blue"
             onClick={exportCsv}
+            disabled={rows.length === 0}
             style={{
               background: '#FFC400',
               color: '#111',
@@ -267,6 +401,7 @@ function ReportsInner() {
               fontSize: '13px',
               fontWeight: 700,
               cursor: 'pointer',
+              opacity: rows.length === 0 ? 0.5 : 1,
             }}
           >
             Export CSV
@@ -274,260 +409,316 @@ function ReportsInner() {
         </div>
       </div>
 
-      {/* metric strip */}
-      <div
-        className="reports-metric-strip"
-        style={{
-          marginTop: '28px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6,1fr)',
-          gap: 0,
-          border: '1px solid #2E2E29',
-          background: '#1C1C18',
-          borderRadius: '8px',
-          overflow: 'hidden',
-        }}
-      >
-        {metrics.map((m, i) => (
-          <div
-            key={m.label}
-            className="reports-metric-cell"
-            style={{ padding: '18px 20px', borderLeft: i === 0 ? '0' : '1px solid #26261F' }}
-          >
-            <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#9A968A' }}>
-              {m.label}
-            </div>
-            <div
-              style={{
-                fontSize: '24px',
-                fontWeight: 800,
-                marginTop: '6px',
-                letterSpacing: '-.02em',
-                color: m.color || '#F2F0E9',
-              }}
-            >
-              {m.value}
-            </div>
-            <div style={{ fontSize: '11.5px', color: '#9A968A', marginTop: '2px' }}>{m.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* two-column */}
-      <div
-        className="reports-two-col"
-        style={{
-          marginTop: '28px',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)',
-          gap: '28px',
-          alignItems: 'start',
-        }}
-      >
-        {/* LEFT: per branch */}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '10px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
-              PER BRANCH
-            </div>
-            <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#9A968A' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', background: '#FFC400', display: 'inline-block' }} />
-                Billed
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', background: '#FFFFFF', display: 'inline-block' }} />
-                Received
-              </div>
-            </div>
-          </div>
-          <div
-            style={{
-              marginTop: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '18px',
-              borderTop: '1px solid #2E2E29',
-              paddingTop: '20px',
-            }}
-          >
-            {BRANCH_STATS.map((b) => {
-              const matched = b.received >= b.billed;
-              return (
-                <div key={b.name}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '13px' }}>
-                    <div style={{ fontWeight: 700, color: '#F2F0E9' }}>{b.name}</div>
-                    <div
-                      className="mono"
-                      style={{ fontSize: '12px', fontWeight: 700, color: matched ? '#6FCF8E' : '#F08A8A' }}
-                    >
-                      {matched ? 'matched' : 'gap ' + inr(b.billed - b.received)}
-                    </div>
-                  </div>
-                  <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ flex: 1, height: '12px', background: '#26261F' }}>
-                        <div
-                          style={{
-                            width: Math.round((b.billed / maxB) * 100) + '%',
-                            height: '100%',
-                            background: '#FFC400',
-                          }}
-                        />
-                      </div>
-                      <div
-                        className="mono"
-                        style={{ width: '80px', textAlign: 'right', fontSize: '12.5px', fontWeight: 700, color: '#F2F0E9' }}
-                      >
-                        {inr(b.billed)}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ flex: 1, height: '12px', background: '#26261F' }}>
-                        <div
-                          style={{
-                            width: Math.round((b.received / maxB) * 100) + '%',
-                            height: '100%',
-                            background: '#FFFFFF',
-                          }}
-                        />
-                      </div>
-                      <div
-                        className="mono"
-                        style={{ width: '80px', textAlign: 'right', fontSize: '12.5px', fontWeight: 700, color: '#F2F0E9' }}
-                      >
-                        {inr(b.received)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {loadError && (
+        <div
+          style={{
+            marginTop: '18px',
+            borderLeft: '3px solid #F08A8A',
+            background: '#1C1C18',
+            padding: '12px 16px',
+            fontSize: '13px',
+            color: '#F08A8A',
+            borderRadius: '0 6px 6px 0',
+          }}
+        >
+          {loadError}
         </div>
+      )}
 
-        {/* RIGHT: top services + mismatches */}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
-            TOP SERVICES
+      {loading ? (
+        <div style={{ padding: '48px 0', color: '#9A968A', fontSize: '14px' }}>Loading report…</div>
+      ) : rows.length === 0 ? (
+        <div style={{ padding: '48px 0', maxWidth: 520 }}>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: '#F2F0E9' }}>
+            No orders in this period
           </div>
+          <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#9A968A', marginTop: '8px' }}>
+            Nothing was billed between {from} and {to}. Pick another date, or widen the range to
+            Week or Month.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* metric strip */}
           <div
+            className="reports-metric-strip"
             style={{
-              marginTop: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              borderTop: '1px solid #2E2E29',
-              paddingTop: '20px',
+              marginTop: '28px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(6,1fr)',
+              gap: 0,
+              border: '1px solid #2E2E29',
+              background: '#1C1C18',
+              borderRadius: '8px',
+              overflow: 'hidden',
             }}
           >
-            {TOP_SERVICES.map((s, i) => (
-              <div key={s.name}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                  <div style={{ fontWeight: 600, color: '#F2F0E9' }}>{s.name}</div>
-                  <div className="mono" style={{ fontWeight: 700, color: '#F2F0E9' }}>
-                    {inr(s.amount)}
-                  </div>
+            {metrics.map((m, i) => (
+              <div
+                key={m.label}
+                className="reports-metric-cell"
+                style={{ padding: '18px 20px', borderLeft: i === 0 ? '0' : '1px solid #26261F' }}
+              >
+                <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '.14em', color: '#9A968A' }}>
+                  {m.label}
                 </div>
-                <div style={{ marginTop: '6px', height: '8px', background: '#26261F' }}>
-                  <div
-                    style={{
-                      width: Math.round((s.amount / maxSvc) * 100) + '%',
-                      height: '100%',
-                      background: i === 0 ? '#FFC400' : '#6E6B62',
-                    }}
-                  />
+                <div
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 800,
+                    marginTop: '6px',
+                    letterSpacing: '-.02em',
+                    color: m.color || '#F2F0E9',
+                  }}
+                >
+                  {m.value}
                 </div>
+                <div style={{ fontSize: '11.5px', color: '#9A968A', marginTop: '2px' }}>{m.sub}</div>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: '28px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
-              MISMATCHES TO CHASE
-            </div>
-            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {MISMATCHES.map((m) => (
-                <div key={m.title} style={{ borderLeft: '2px solid #F08A8A', paddingLeft: '14px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#F08A8A' }}>{m.title}</div>
-                  <div style={{ fontSize: '12.5px', color: '#C9C6BC', marginTop: '3px', lineHeight: 1.5 }}>
-                    {m.body}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* orders table */}
-      <div style={{ marginTop: '40px', overflowX: 'auto' }}>
-        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
-          ORDERS — {rangeLabel.toUpperCase()}
-        </div>
-        <div style={{ marginTop: '16px', minWidth: '1020px' }}>
+          {/* two-column */}
           <div
+            className="reports-two-col"
             style={{
+              marginTop: '28px',
               display: 'grid',
-              gridTemplateColumns: '64px 190px 140px minmax(220px,1fr) 90px 90px 180px',
-              gap: '14px',
-              padding: '0 0 10px',
-              borderBottom: '1px solid #F2F0E9',
-              fontSize: '10.5px',
-              fontWeight: 700,
-              letterSpacing: '.12em',
-              color: '#9A968A',
+              gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)',
+              gap: '28px',
+              alignItems: 'start',
             }}
           >
-            <div>TIME</div>
-            <div>ORDER</div>
-            <div>BRANCH</div>
-            <div>JOB</div>
-            <div style={{ textAlign: 'right' }}>BILLED</div>
-            <div style={{ textAlign: 'right' }}>RECEIVED</div>
-            <div>STATUS</div>
-          </div>
-          {REPORT_ROWS.map((r) => (
-            <div
-              key={r.no}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '64px 190px 140px minmax(220px,1fr) 90px 90px 180px',
-                gap: '14px',
-                padding: '13px 0',
-                borderBottom: '1px solid #26261F',
-                fontSize: '13px',
-                alignItems: 'center',
-              }}
-            >
-              <div className="mono" style={{ color: '#C9C6BC', fontSize: '12px' }}>
-                {r.time}
-              </div>
-              <div className="mono" style={{ fontSize: '11.5px', color: '#C9C6BC' }}>
-                {r.no}
-              </div>
-              <div style={{ color: '#F2F0E9' }}>{r.branch}</div>
-              <div style={{ color: '#C9C6BC' }}>{r.job}</div>
-              <div className="mono" style={{ textAlign: 'right', fontWeight: 700, fontSize: '12.5px', color: '#F2F0E9' }}>
-                {inr(r.billed)}
+            {/* LEFT: per branch */}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
+                  PER BRANCH
+                </div>
+                <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#9A968A' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '10px', height: '10px', background: '#FFC400', display: 'inline-block' }} />
+                    Billed
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '10px', height: '10px', background: '#FFFFFF', display: 'inline-block' }} />
+                    Received
+                  </div>
+                </div>
               </div>
               <div
-                className="mono"
                 style={{
-                  textAlign: 'right',
-                  fontWeight: 700,
-                  fontSize: '12.5px',
-                  color: r.received ? '#6FCF8E' : '#F08A8A',
+                  marginTop: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '18px',
+                  borderTop: '1px solid #2E2E29',
+                  paddingTop: '20px',
                 }}
               >
-                {r.received ? inr(r.received) : '—'}
-              </div>
-              <div>
-                <span style={pill(r.status)}>{statusLabel(r.status)}</span>
+                {branchStats.length === 0 && (
+                  <div style={{ fontSize: '13px', color: '#9A968A' }}>
+                    Every order in this period was cancelled.
+                  </div>
+                )}
+                {branchStats.map((b) => {
+                  const matched = b.received >= b.billed;
+                  return (
+                    <div key={b.name}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '13px' }}>
+                        <div style={{ fontWeight: 700, color: '#F2F0E9' }}>{b.name}</div>
+                        <div
+                          className="mono"
+                          style={{ fontSize: '12px', fontWeight: 700, color: matched ? '#6FCF8E' : '#F08A8A' }}
+                        >
+                          {matched ? 'matched' : 'gap ' + inr(b.billed - b.received)}
+                        </div>
+                      </div>
+                      <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ flex: 1, height: '12px', background: '#26261F' }}>
+                            <div
+                              style={{
+                                width: Math.round((b.billed / maxB) * 100) + '%',
+                                height: '100%',
+                                background: '#FFC400',
+                              }}
+                            />
+                          </div>
+                          <div
+                            className="mono"
+                            style={{ width: '80px', textAlign: 'right', fontSize: '12.5px', fontWeight: 700, color: '#F2F0E9' }}
+                          >
+                            {inr(b.billed)}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ flex: 1, height: '12px', background: '#26261F' }}>
+                            <div
+                              style={{
+                                width: Math.round((b.received / maxB) * 100) + '%',
+                                height: '100%',
+                                background: '#FFFFFF',
+                              }}
+                            />
+                          </div>
+                          <div
+                            className="mono"
+                            style={{ width: '80px', textAlign: 'right', fontSize: '12.5px', fontWeight: 700, color: '#F2F0E9' }}
+                          >
+                            {inr(b.received)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+
+            {/* RIGHT: top services + mismatches */}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
+                TOP SERVICES
+              </div>
+              <div
+                style={{
+                  marginTop: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '14px',
+                  borderTop: '1px solid #2E2E29',
+                  paddingTop: '20px',
+                }}
+              >
+                {topServices.length === 0 && (
+                  <div style={{ fontSize: '13px', color: '#9A968A' }}>
+                    No priced line items in this period.
+                  </div>
+                )}
+                {topServices.map((s, i) => (
+                  <div key={s.name}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                      <div style={{ fontWeight: 600, color: '#F2F0E9' }}>{s.name}</div>
+                      <div className="mono" style={{ fontWeight: 700, color: '#F2F0E9' }}>
+                        {inr(s.amount)}
+                      </div>
+                    </div>
+                    <div style={{ marginTop: '6px', height: '8px', background: '#26261F' }}>
+                      <div
+                        style={{
+                          width: Math.round((s.amount / maxSvc) * 100) + '%',
+                          height: '100%',
+                          background: i === 0 ? '#FFC400' : '#6E6B62',
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: '28px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
+                  MISMATCHES TO CHASE
+                </div>
+                <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {mismatches.length === 0 ? (
+                    <div style={{ borderLeft: '2px solid #6FCF8E', paddingLeft: '14px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#6FCF8E' }}>
+                        All settled
+                      </div>
+                      <div style={{ fontSize: '12.5px', color: '#C9C6BC', marginTop: '3px', lineHeight: 1.5 }}>
+                        Every order in this period is paid and verified.
+                      </div>
+                    </div>
+                  ) : (
+                    mismatches.map((m, k) => (
+                      <div key={k} style={{ borderLeft: '2px solid #F08A8A', paddingLeft: '14px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#F08A8A' }}>{m.title}</div>
+                        <div style={{ fontSize: '12.5px', color: '#C9C6BC', marginTop: '3px', lineHeight: 1.5 }}>
+                          {m.body}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* orders table */}
+          <div style={{ marginTop: '40px', overflowX: 'auto' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '.2em', color: '#9A968A' }}>
+              ORDERS — {rangeLabel.toUpperCase()}
+            </div>
+            <div style={{ marginTop: '16px', minWidth: '1020px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '64px 190px 140px minmax(220px,1fr) 90px 90px 180px',
+                  gap: '14px',
+                  padding: '0 0 10px',
+                  borderBottom: '1px solid #F2F0E9',
+                  fontSize: '10.5px',
+                  fontWeight: 700,
+                  letterSpacing: '.12em',
+                  color: '#9A968A',
+                }}
+              >
+                <div>TIME</div>
+                <div>ORDER</div>
+                <div>BRANCH</div>
+                <div>JOB</div>
+                <div style={{ textAlign: 'right' }}>BILLED</div>
+                <div style={{ textAlign: 'right' }}>RECEIVED</div>
+                <div>STATUS</div>
+              </div>
+              {rows.map((r) => {
+                const paid = isPaid(r);
+                return (
+                  <div
+                    key={r.id}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '64px 190px 140px minmax(220px,1fr) 90px 90px 180px',
+                      gap: '14px',
+                      padding: '13px 0',
+                      borderBottom: '1px solid #26261F',
+                      fontSize: '13px',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div className="mono" style={{ color: '#C9C6BC', fontSize: '12px' }}>
+                      {clockTime(r.created_at)}
+                    </div>
+                    <div className="mono" style={{ fontSize: '11.5px', color: '#C9C6BC' }}>
+                      {r.order_no}
+                    </div>
+                    <div style={{ color: '#F2F0E9' }}>{branchName(r.branch_id)}</div>
+                    <div style={{ color: '#C9C6BC' }}>{jobSummary(r)}</div>
+                    <div className="mono" style={{ textAlign: 'right', fontWeight: 700, fontSize: '12.5px', color: '#F2F0E9' }}>
+                      {inr(orderTotal(r))}
+                    </div>
+                    <div
+                      className="mono"
+                      style={{
+                        textAlign: 'right',
+                        fontWeight: 700,
+                        fontSize: '12.5px',
+                        color: paid ? '#6FCF8E' : '#F08A8A',
+                      }}
+                    >
+                      {paid ? inr(orderTotal(r)) : '—'}
+                    </div>
+                    <div>
+                      <span style={pill(r.status as Status)}>{statusLabel(r.status as Status)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
