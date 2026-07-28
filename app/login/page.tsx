@@ -53,6 +53,10 @@ export default function LoginPage() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // Supabase's Email OTP Length is configurable (6–10 digits), so never assume
+  // 6 — the send-code route reports the real length. null = not yet known
+  // (Supabase's own mailer sent it), in which case accept anything in range.
+  const [digits, setDigits] = useState<number | null>(null);
 
   async function sendCode(e: FormEvent) {
     e.preventDefault();
@@ -83,6 +87,7 @@ export default function LoginPage() {
         setBusy(false);
         setEmail(addr);
         setCode("");
+        setDigits(typeof out.digits === "number" ? out.digits : null);
         setStep("code");
         return;
       }
@@ -115,6 +120,7 @@ export default function LoginPage() {
     }
     setEmail(addr);
     setCode("");
+    setDigits(null); // Supabase sent it; its configured length is unknown here
     setStep("code");
   }
 
@@ -124,8 +130,8 @@ export default function LoginPage() {
     const supabase = getSupabaseBrowser();
     if (!supabase) return;
     const token = code.trim();
-    if (token.length < 6) {
-      setError("Enter the 6-digit code from the email.");
+    if (token.length < (digits ?? 6)) {
+      setError(`Enter the ${digits ?? 6}-digit code from the email.`);
       return;
     }
     setBusy(true);
@@ -211,7 +217,7 @@ export default function LoginPage() {
       ) : (
         <form onSubmit={verifyCode}>
           <p style={{ fontSize: 14, lineHeight: 1.6, color: "#C9C6BC", margin: "0 0 16px" }}>
-            We emailed a 6-digit code to{" "}
+            We emailed a {digits ? `${digits}-digit ` : ""}code to{" "}
             <span style={{ color: "#F2F0E9", fontWeight: 600 }}>{email}</span>
           </p>
           <label style={LABEL} htmlFor="login-code">
@@ -222,10 +228,10 @@ export default function LoginPage() {
             className="mono"
             inputMode="numeric"
             autoComplete="one-time-code"
-            maxLength={6}
+            maxLength={digits ?? 10}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            placeholder="000000"
+            placeholder={"0".repeat(digits ?? 6)}
             style={{ ...INPUT, letterSpacing: ".3em", fontSize: 18 }}
             disabled={busy}
           />

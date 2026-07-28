@@ -119,5 +119,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ ok: true, via: "resend" });
+  // digits: the project's Email OTP Length setting is configurable (6–10), so
+  // tell the client how long the code it should expect is rather than assuming.
+  return NextResponse.json({ ok: true, via: "resend", digits: code.length });
 }
