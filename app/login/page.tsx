@@ -69,6 +69,9 @@ export default function LoginPage() {
     // Preferred path: we mint and email the code ourselves (Resend), so a
     // misconfigured Supabase SMTP setup cannot block logins. The route answers
     // { fallback: true } when it is not fully configured.
+    // Set when the route got far enough to prove Supabase's auth database and
+    // code generation are healthy — which pins any failure below on the mailer.
+    let authDbOk = false;
     try {
       const res = await fetch("/api/auth/send-code", {
         method: "POST",
@@ -88,6 +91,7 @@ export default function LoginPage() {
         setError(out.error || "Could not send the login code. Please try again.");
         return;
       }
+      authDbOk = !!out?.authDbOk;
     } catch {
       // Route unreachable — try Supabase's own mailer below.
     }
@@ -103,7 +107,9 @@ export default function LoginPage() {
       const useful = raw && raw !== "{}" && raw !== "[object Object]" ? raw : "";
       setError(
         useful ||
-          `Could not send the login email (code ${err.status ?? "unknown"}). Supabase's mailer rejected it — either fix Authentication → SMTP (see the Auth logs for the reason), or set RESEND_API_KEY in Vercel so the site sends login codes itself.`
+          (authDbOk
+            ? `Could not send the login email (code ${err.status ?? "unknown"}). The database side is fine — this is Supabase's mailer. Set RESEND_API_KEY in Vercel so the site sends codes itself, or fix Authentication → SMTP.`
+            : `Could not send the login email (code ${err.status ?? "unknown"}). Supabase's mailer rejected it — either fix Authentication → SMTP (see the Auth logs for the reason), or set RESEND_API_KEY in Vercel so the site sends login codes itself.`)
       );
       return;
     }

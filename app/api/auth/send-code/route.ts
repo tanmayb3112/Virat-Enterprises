@@ -54,13 +54,14 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = getSupabaseAdmin();
-  if (!supabase || !process.env.RESEND_API_KEY) {
-    return NextResponse.json({
-      ok: false,
-      fallback: true,
-      reason: !supabase ? "no_service_role_key" : "no_resend_key",
-    });
+  if (!supabase) {
+    return NextResponse.json({ ok: false, fallback: true, reason: "no_service_role_key" });
   }
+
+  // Note the Resend key is NOT required to get this far: with only the
+  // service-role key we can still run the Supabase half below and report
+  // whether the auth database path is healthy, which is the diagnosis that
+  // matters. Delivery is checked at step 3.
 
   // 1. Ensure the auth user exists (passwordless, email pre-confirmed). This is
   //    also where a broken on_auth_user_created trigger surfaces as a real
@@ -98,7 +99,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 3. Deliver it ourselves.
+  // 3. Deliver it ourselves — or hand back to Supabase's mailer if we can't.
+  //    Reaching here proves the auth database path is healthy, so a 500 from
+  //    the fallback is the mailer's fault and nothing else.
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json({
+      ok: false,
+      fallback: true,
+      reason: "no_resend_key",
+      authDbOk: true,
+    });
+  }
+
   const sent = await sendLoginCode({ to: email, code });
   if (!sent.sent) {
     return NextResponse.json(
