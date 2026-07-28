@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { config, modeLabel } from "@/lib/config";
 import Logo from "@/components/Logo";
+import { useAuth } from "@/lib/auth";
 
 const NAV = [
   { href: "/", label: "Home", match: (p: string) => p === "/" },
@@ -17,6 +18,12 @@ const NAV = [
 export default function Header() {
   const pathname = usePathname() || "/";
   const [open, setOpen] = useState(false);
+  const { loading, live, user, role } = useAuth();
+  const isStaff = role === "admin" || role === "staff";
+  // Staff/Reports links are visible only to logged-in staff (live mode).
+  // In demo mode nobody can log in, so they're hidden for everyone — the
+  // /admin URL still works via the AdminGate preview.
+  const visibleNav = NAV.filter((n) => (n.href.startsWith("/admin") ? live && isStaff : true));
   return (
     <div
       style={{
@@ -47,7 +54,7 @@ export default function Header() {
           className="hidden md:flex"
           style={{ gap: 18, alignItems: "center", height: "100%", flex: "none" }}
         >
-          {NAV.map((n) => {
+          {visibleNav.map((n) => {
             const active = n.match(pathname);
             return (
               <Link
@@ -115,6 +122,23 @@ export default function Header() {
           >
             WhatsApp
           </a>
+          {loading ? null : user ? (
+            <Link
+              href="/account"
+              className="hidden md:block"
+              style={{ fontSize: 13, fontWeight: 600, color: "#FFC400", whiteSpace: "nowrap", flex: "none" }}
+            >
+              Account
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden md:block"
+              style={{ fontSize: 13, fontWeight: 600, color: "#FFC400", whiteSpace: "nowrap", flex: "none" }}
+            >
+              Login
+            </Link>
+          )}
           <Link
             href="/order"
             className="h-blue"
@@ -156,7 +180,7 @@ export default function Header() {
           className="md:hidden"
           style={{ borderTop: "1px solid #2E2E29", background: "#121210" }}
         >
-          {NAV.map((n) => {
+          {visibleNav.map((n) => {
             const active = n.match(pathname);
             return (
               <Link
@@ -185,6 +209,23 @@ export default function Header() {
           >
             WhatsApp us
           </a>
+          {loading ? null : user ? (
+            <Link
+              href="/account"
+              onClick={() => setOpen(false)}
+              style={{ display: "block", padding: "14px 20px", fontSize: 15, fontWeight: 600, color: "#FFC400" }}
+            >
+              Account
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              style={{ display: "block", padding: "14px 20px", fontSize: 15, fontWeight: 600, color: "#FFC400" }}
+            >
+              Login
+            </Link>
+          )}
         </nav>
       )}
     </div>
