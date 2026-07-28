@@ -248,6 +248,23 @@ create policy leads_staff on franchise_leads for select using (is_staff());
 -- dedicated RPC/edge function in production.
 
 -- =========================================================================
+-- Storage: print-files bucket (private, 25 MB/file cap)
+-- =========================================================================
+-- Customers upload their print files here at order time (folder = order
+-- token). WRITE-ONLY for the public: anyone can insert, nobody can read or
+-- list without the service role — staff downloads use signed URLs. Files are
+-- purged by the 7-day retention cron after order completion.
+
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('print-files', 'print-files', false, 26214400)
+on conflict (id) do nothing;
+
+drop policy if exists "print_files_public_upload" on storage.objects;
+create policy "print_files_public_upload" on storage.objects
+  for insert to anon, authenticated
+  with check (bucket_id = 'print-files');
+
+-- =========================================================================
 -- Seed data
 -- =========================================================================
 insert into branches (id, name, brand_name, address, phone, lat, lng, hours, upi_id, notify_email) values
