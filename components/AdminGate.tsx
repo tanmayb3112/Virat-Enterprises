@@ -1,8 +1,9 @@
 "use client";
 
 // AdminGate — wraps the /admin pages. Live mode: only admin/staff get through,
-// everyone else is asked to log in. Demo mode: a one-time interstitial makes
-// clear the dashboard behind it is sample data, then lets reviewers in.
+// everyone else is asked to log in. Demo mode (no Supabase): the pages behind
+// this have no data to show, so the interstitial says so rather than promising
+// a sample dashboard.
 
 import { useState } from "react";
 import Link from "next/link";
@@ -70,14 +71,14 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
       <div style={WRAP}>
         <div style={KICKER}>STAFF AREA</div>
         <h1 style={{ fontSize: 30, fontWeight: 800, color: "#F2F0E9", margin: "12px 0 12px" }}>
-          Staff preview
+          Staff area
         </h1>
         <p style={{ fontSize: 14.5, lineHeight: 1.65, color: "#C9C6BC", margin: "0 0 24px" }}>
-          This is the staff dashboard with sample data. Real orders and logins activate
-          once the database is connected.
+          The dashboard reads live orders from the database. Connect Supabase to activate
+          it — until then there is nothing to show here.
         </p>
         <button type="button" onClick={() => setPreviewOk(true)} className="h-orange" style={BTN}>
-          View demo preview
+          Continue anyway
         </button>
       </div>
     );

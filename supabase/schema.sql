@@ -83,6 +83,11 @@ create table if not exists orders (
   created_at timestamptz not null default now()
 );
 
+-- Finishing choices are per-order, not per-file. Added after the table shipped,
+-- so these run as alters for databases that already exist.
+alter table orders add column if not exists binding text;
+alter table orders add column if not exists lamination text;
+
 -- Stamp completed_at automatically when an order reaches a terminal status —
 -- the file-retention cron (app/api/cron/cleanup) deletes print files from
 -- Storage 7 days after this timestamp.
@@ -239,6 +244,32 @@ create policy items_read on order_items for select using (
   is_staff() or exists (select 1 from orders o where o.id = order_items.order_id and o.customer_profile_id = auth.uid())
 );
 
+-- Order events (the audit trail) read like order items do. Writes go through the
+-- service role in /api/admin/orders, which stamps the acting staff email.
+drop policy if exists events_read on order_events;
+create policy events_read on order_events for select using (
+  is_staff() or exists (
+    select 1 from orders o where o.id = order_events.order_id and o.customer_profile_id = auth.uid()
+  )
+);
+
+-- Courier bookings: staff only.
+drop policy if exists deliveries_staff on deliveries;
+create policy deliveries_staff on deliveries for all using (is_staff()) with check (is_staff());
+
+-- Realtime: the dashboard subscribes to orders so a new job appears on the
+-- counter screen without a refresh. Delivery still respects the policies above,
+-- which is why the profiles.role sync further down matters.
+-- Failing soft on purpose: the table may already be published, the publication
+-- may not exist, or the role may not own it. The dashboard polls every 20s as
+-- well, so losing the socket degrades the experience rather than breaking it.
+do $$
+begin
+  alter publication supabase_realtime add table orders;
+exception
+  when others then null;
+end $$;
+
 -- Franchise leads: only staff/admin can read; inserts happen via service role (API).
 drop policy if exists leads_staff on franchise_leads;
 create policy leads_staff on franchise_leads for select using (is_staff());
@@ -250,12 +281,29 @@ create policy leads_staff on franchise_leads for select using (is_staff());
 -- =========================================================================
 -- Auth: auto-create a profile row on signup + self-service policies
 -- =========================================================================
+-- profiles.role must agree with the allowed_staff_emails allowlist, which is
+-- what the app treats as the source of truth (/api/me, /admin/settings).
+-- is_staff()/is_admin() below read profiles.role, so without this sync every
+-- RLS policy sees a staff member as a plain customer — which silently blocks
+-- staff reads and stops Realtime from delivering anything to the dashboard.
+create or replace function role_for_email(addr text) returns text
+language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select a.role from allowed_staff_emails a where lower(a.email) = lower(addr)),
+    'customer'
+  );
+$$;
+
 create or replace function handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  insert into profiles (id, name)
-  values (new.id, coalesce(new.raw_user_meta_data->>'name', null))
-  on conflict (id) do nothing;
+  insert into profiles (id, name, role)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'name', null),
+    role_for_email(new.email)
+  )
+  on conflict (id) do update set role = role_for_email(new.email);
   return new;
 end;
 $$;
@@ -263,6 +311,28 @@ $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function handle_new_user();
+
+-- Granting someone staff access must also apply to an account they already
+-- have, otherwise the allowlist only takes effect for people who sign up after
+-- being added.
+create or replace function sync_profile_role_from_allowlist() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  update profiles p set role = new.role
+    from auth.users u
+   where u.id = p.id and lower(u.email) = lower(new.email);
+  return new;
+end;
+$$;
+
+drop trigger if exists allowlist_syncs_profile_role on allowed_staff_emails;
+create trigger allowlist_syncs_profile_role after insert or update on allowed_staff_emails
+  for each row execute function sync_profile_role_from_allowlist();
+
+-- Backfill: anyone who signed up before the sync existed (idempotent).
+update profiles p set role = role_for_email(u.email)
+  from auth.users u
+ where u.id = p.id and p.role is distinct from role_for_email(u.email);
 
 -- Users may insert/update their own profile (fallback if the trigger missed).
 drop policy if exists profiles_insert on profiles;

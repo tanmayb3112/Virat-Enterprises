@@ -54,6 +54,40 @@ resend.com/domains, set `RESEND_FROM` to an address on it, redeploy.** Customer
 logins are impossible until then (guest checkout is unaffected — the order wizard
 takes guest name/phone/email, so ordering never required login).
 
+## LIVE STAFF DASHBOARD (was next task #3 — now built)
+`/admin` streams real orders. Architecture: the browser proves identity with its
+Supabase access token, `lib/adminAuth.ts` (`requireStaff`) checks it against
+`allowed_staff_emails`, and everything then runs through the **service role** — so
+the dashboard does not depend on RLS matching the allowlist.
+- `GET /api/admin/orders` — branch-scoped list (200 newest) with `order_events` +
+  `deliveries` nested. Pinned staff see only their `branch_ids`; admins and
+  unpinned staff see all.
+- `PATCH /api/admin/orders` — actions `status` / `verify_payment` / `reprice` /
+  `book_delivery` / `cancel`. Each writes an `order_events` row stamped with the
+  acting email, so the audit trail is real history, not a re-render of status.
+- `POST /api/admin/files` — signed download URLs (5 min). Takes an **orderId, not
+  a path**, so staff cannot browse the private bucket. Paths follow the wizard's
+  `<token>/<file_name>` convention. Returns 410 once the retention cron purged.
+- Live updates: Supabase Realtime on `orders` **plus a 20s poll** as the safety
+  net; header shows "Live" vs "Refreshing every 20s".
+- Repricing an office file recomputes via `lib/pricing.ts` and applies
+  `total - oldItemsSum + newItemsSum`, preserving binding/lamination/min-order.
+
+**Schema changes — `supabase/schema.sql` MUST BE RE-RUN for these:**
+1. `profiles.role` now syncs from `allowed_staff_emails` (`role_for_email`,
+   allowlist trigger, one-time backfill). Previously nothing set it, so
+   `is_staff()` was false for staff and every RLS policy treated the admin as a
+   customer — this is why direct client reads and Realtime would have returned
+   nothing.
+2. `orders.binding` / `orders.lamination` added (as alters). The order API was
+   accepting these in its body and dropping them, so the job ticket could never
+   show finishing. Now persisted.
+3. New policies: `events_read`, `deliveries_staff`. `orders` added to the
+   `supabase_realtime` publication (fails soft — polling covers it).
+
+**Still mock: `/admin/reports`** (541 lines of hard-coded metrics). It can now
+aggregate from the same `/api/admin/orders` payload — that is the next task.
+
 ## CURRENT STATE / IN-FLIGHT (most important)
 Owner is mid-launch, connecting Supabase. Timeline of debugging:
 1. Owner created Supabase project, ran schema.sql (possibly needs RE-RUN for auth trigger + latest seeds — told to re-run; unconfirmed).
