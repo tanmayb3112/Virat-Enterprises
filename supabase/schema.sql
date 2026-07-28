@@ -342,8 +342,7 @@ insert into franchise_assumptions (key, value) values
   ('year_growth_pct', 15)
 on conflict (key) do nothing;
 
--- Seed the admin allowlist with the owner emails (edit as needed).
+-- Seed the admin allowlist with the owner email (edit on /admin/settings).
 insert into allowed_staff_emails (email, role) values
-  ('tanmay.bhanushali@photonlegal.com', 'admin'),
-  ('tanmaybhanushali151@gmail.com', 'admin')
+  ('tanmay.bhanushali@photonlegal.com', 'admin')
 on conflict (email) do update set role = 'admin';
