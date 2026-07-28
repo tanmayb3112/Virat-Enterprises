@@ -24,6 +24,7 @@ import { config } from "@/lib/config";
 import { inr } from "@/lib/format";
 import { buildOrderWhatsappUrl, branchCode } from "@/lib/whatsapp";
 import type { OrderPayload } from "@/lib/whatsapp";
+import { getSupabaseBrowser } from "@/lib/supabase/client";
 
 /* ------------------------------------------------------------------ */
 /* shared style atoms                                                  */
@@ -131,6 +132,11 @@ export default function OrderPage() {
   const [placed, setPlaced] = useState(false);
   const [orderNo, setOrderNo] = useState("");
   const [branchWhatsapp, setBranchWhatsapp] = useState<string | undefined>(undefined);
+  const [placing, setPlacing] = useState(false);
+  const [filesUploaded, setFilesUploaded] = useState<"none" | "partial" | "all">("none");
+  // Raw File objects kept out of React state (heavy, non-serializable) —
+  // needed at place-order time to upload to the shop's private storage.
+  const rawFilesRef = useRef<Map<string, File>>(new Map());
   const [moreOpen, setMoreOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -194,6 +200,10 @@ export default function OrderPage() {
     const arr = Array.from(list);
     const added: OrderFile[] = [];
     for (const file of arr) {
+      if (file.size > 25 * 1024 * 1024) {
+        alert(`${file.name} is over the 25 MB per-file limit — please compress it or split it.`);
+        continue;
+      }
       const ext = (file.name.split(".").pop() || "").toUpperCase();
       const lower = ext.toLowerCase();
       let kind: OrderFile["kind"];
@@ -215,7 +225,9 @@ export default function OrderPage() {
         kind = "office";
         pages = 0;
       }
-      added.push({ id: uid(), name: file.name, ext, kind, pages, prefs: defaultPrefs() });
+      const id = uid();
+      rawFilesRef.current.set(id, file);
+      added.push({ id, name: file.name, ext, kind, pages, prefs: defaultPrefs() });
     }
     setFiles((prev) => {
       const next = [...prev, ...added];
@@ -225,6 +237,7 @@ export default function OrderPage() {
   }
 
   function removeFile(id: string) {
+    rawFilesRef.current.delete(id);
     setFiles((prev) => prev.filter((f) => f.id !== id));
   }
   function setFilePages(id: string, val: number) {
@@ -252,6 +265,8 @@ export default function OrderPage() {
   }
 
   async function placeOrder() {
+    if (placing) return;
+    setPlacing(true);
     const items = files.map((f) => ({
       file_name: f.name,
       page_count: f.pages,
@@ -276,14 +291,21 @@ export default function OrderPage() {
       utm: utmRef.current,
     };
     let no = "";
+    let token = "";
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await res.json()) as { orderNo?: string; whatsapp?: string | null };
+      const data = (await res.json()) as {
+        orderNo?: string;
+        token?: string;
+        tracked?: boolean;
+        whatsapp?: string | null;
+      };
       no = data.orderNo ?? "";
+      token = data.token ?? "";
       if (data.whatsapp) setBranchWhatsapp(data.whatsapp);
       if (!no) throw new Error("no orderNo");
     } catch {
@@ -292,7 +314,30 @@ export default function OrderPage() {
       const rand4 = String(Math.floor(1000 + Math.random() * 9000));
       no = `VE-${branchCode(branchName)}-${ym}-${rand4}`;
     }
+
+    // Upload the actual files to the shop's storage when the backend is
+    // connected (private write-only bucket; the order token is the folder).
+    // Any failure falls back to the WhatsApp file handover — never blocks.
+    const supabase = getSupabaseBrowser();
+    if (supabase && token) {
+      let okCount = 0;
+      for (const f of files) {
+        const raw = rawFilesRef.current.get(f.id);
+        if (!raw) continue;
+        try {
+          const { error } = await supabase.storage
+            .from("print-files")
+            .upload(`${token}/${f.name}`, raw, { upsert: true });
+          if (!error) okCount += 1;
+        } catch {
+          // keep going; remaining files may still upload
+        }
+      }
+      setFilesUploaded(okCount === files.length && files.length > 0 ? "all" : okCount > 0 ? "partial" : "none");
+    }
+
     setOrderNo(no);
+    setPlacing(false);
     setPlaced(true);
   }
 
@@ -312,6 +357,9 @@ export default function OrderPage() {
     setMoreOpen(false);
     setOrderNo("");
     setPlaced(false);
+    setPlacing(false);
+    setFilesUploaded("none");
+    rawFilesRef.current.clear();
   }
 
   /* ------------------------------ render ----------------------------- */
@@ -1481,8 +1529,13 @@ export default function OrderPage() {
           {order.totalSheets} sheets · {order.filesWithPages} files · updates live
         </div>
         <div style={{ padding: "0 20px 20px" }}>
-          <button onClick={handleNext} className={canContinue ? "h-orange" : undefined} style={nextStyle}>
-            {step < 5 ? "Continue" : "Place order"}
+          <button
+            onClick={handleNext}
+            disabled={placing}
+            className={canContinue && !placing ? "h-orange" : undefined}
+            style={nextStyle}
+          >
+            {step < 5 ? "Continue" : placing ? "Placing order… sending files" : "Place order"}
           </button>
           {step > 1 && (
             <button
@@ -1540,6 +1593,7 @@ export default function OrderPage() {
       custName,
       custPhone,
       whatsappNumber: branchWhatsapp,
+      filesUploaded: filesUploaded === "all",
     };
     const waUrl = buildOrderWhatsappUrl(payload);
     const trackerLabels = [
@@ -1664,11 +1718,17 @@ export default function OrderPage() {
             textAlign: "center",
           }}
         >
-          Send files &amp; confirm on WhatsApp
+          {filesUploaded === "all" ? "Confirm on WhatsApp" : "Send files & confirm on WhatsApp"}
         </a>
-        <div style={{ fontSize: 12.5, color: "#6E6B62", marginTop: 8, textAlign: "center" }}>
-          Attach your files in the WhatsApp chat to finish.
-        </div>
+        {filesUploaded === "all" ? (
+          <div style={{ fontSize: 12.5, color: "#6FCF8E", fontWeight: 700, marginTop: 8, textAlign: "center" }}>
+            Files uploaded to the shop ✓ — no need to send them again.
+          </div>
+        ) : (
+          <div style={{ fontSize: 12.5, color: "#6E6B62", marginTop: 8, textAlign: "center" }}>
+            Attach your files in the WhatsApp chat to finish.
+          </div>
+        )}
 
         <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
           <button

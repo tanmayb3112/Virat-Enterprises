@@ -24,6 +24,9 @@ export interface OrderPayload {
   // Per-branch WhatsApp (from admin settings via the order API); falls back
   // to the global shop number when the branch has none configured.
   whatsappNumber?: string;
+  // True when the files were already uploaded to the shop's storage — the
+  // WhatsApp message then confirms instead of asking to attach files.
+  filesUploaded?: boolean;
 }
 
 function specLine(f: OrderFile): string {
@@ -65,7 +68,7 @@ export function buildOrderWhatsappUrl(o: OrderPayload): string {
   if (o.utr) lines.push(`UPI ref/UTR: ${o.utr}`);
   lines.push(`Name: ${o.custName} · ${o.custPhone}`);
   lines.push("");
-  lines.push("_I will attach the files here._");
+  lines.push(o.filesUploaded ? "_Files already uploaded on the website._" : "_I will attach the files here._");
   const number = (o.whatsappNumber ?? config.whatsappNumber).replace(/\D/g, "");
   return `https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
