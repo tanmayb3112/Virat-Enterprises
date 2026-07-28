@@ -39,8 +39,20 @@ stage (`create_user` = trigger broken, `generate_code`, `send_email`), so the
 error text on the login page now identifies the cause by itself.
 `GET /api/auth/send-code` reports which env vars are present (booleans only) —
 use it to confirm a deploy picked up the keys.
-Note: Resend's default `onboarding@resend.dev` sender only delivers to the Resend
-account's own address; set `RESEND_FROM` on a verified domain for customer logins.
+**Diagnosis, settled:** creating a user by hand in Authentication → Users
+succeeded (so the trigger is fine) and Invite user failed with `Error sending
+invite email` (so the mailer is not). Gmail SMTP was the whole problem — don't
+spend more time on it, Google throttles/blocks relaying from Supabase's IPs.
+
+**Resend sandbox limit (live constraint):** the owner's Resend account is
+registered to `tanmaybhanushali151@gmail.com`, and until a domain is verified
+Resend 403s any other recipient (`You can only send testing emails to your own
+email address`). So `tanmaybhanushali151@gmail.com` was granted admin in
+`allowed_staff_emails` and is the working login; `tanmay.bhanushali@photonlegal.com`
+cannot receive codes yet. **To fix properly: buy/verify a domain at
+resend.com/domains, set `RESEND_FROM` to an address on it, redeploy.** Customer
+logins are impossible until then (guest checkout is unaffected — the order wizard
+takes guest name/phone/email, so ordering never required login).
 
 ## CURRENT STATE / IN-FLIGHT (most important)
 Owner is mid-launch, connecting Supabase. Timeline of debugging:
