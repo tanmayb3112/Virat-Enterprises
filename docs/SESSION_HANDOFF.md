@@ -110,6 +110,51 @@ both admin screens consume the same payload, so these must not be duplicated.
 
 **No mock data remains anywhere in the app.**
 
+## PAGE COUNTING + REAL PREVIEWS (order wizard)
+Only images used to resolve a page count (hard-coded 1); PDFs were counted by
+regexing raw bytes for `/Type /Page` (mislabelled "parsed by pdf.js" — there was
+no pdf.js) and **everything else got 0**, which blocked step 1 behind a manual
+entry box. `lib/pageCount.ts` now reads each format properly:
+| Format | How |
+|---|---|
+| PDF | pdf.js `numPages` |
+| DOCX | `docProps/app.xml` `<Pages>`; falls back to a word-count estimate when absent (Google Docs exports omit it) |
+| PPTX | counts `ppt/slides/slideN.xml` |
+| ODT/ODP | `meta.xml` `meta:page-count` |
+| TXT/MD/CSV | lines ÷ 46, marked estimated |
+| Images | 1 |
+| XLSX/XLS/legacy DOC/PPT | genuinely indeterminate → asks, and says why |
+
+`source` (`parsed`/`estimated`/`manual`/`unknown`) rides along to the shop as
+`page_count_source` on each item, so staff know what to re-verify.
+
+`lib/pdfPreview.ts` renders **real** thumbnails (first 6 pages via pdf.js, real
+downscaled image thumbnails), replacing grey placeholder rectangles that were
+captioned "Rendered with pdf.js in production". Office formats can't be rendered
+client-side, so that case says so instead of faking it.
+
+**Two traps, both verified the hard way — do not "simplify" these:**
+1. **Use the LEGACY pdf.js build** (`pdfjs-dist/legacy/build/pdf.mjs` + legacy
+   worker). The default build calls `Map.prototype.getOrInsertComputed`, which
+   throws on older browsers — real failure observed. Many customers are on older
+   Android Chrome/WebView. Main build and worker must be the same flavour.
+2. **`import()` needs a literal specifier.** Passing a variable built cleanly and
+   then failed at runtime, silently breaking both counting and rendering.
+   `page.render()` also takes `canvas` **or** `canvasContext` (with canvas null),
+   never both — passing both throws and empties the preview.
+
+The worker is copied to `public/pdf.worker.min.mjs` by
+`scripts/copy-pdf-worker.mjs` from the `prebuild`/`predev` scripts (gitignored) —
+a stable URL the browser resolves, rather than bundler asset-module behaviour
+that differs between dev, build and Vercel.
+
+**Verification loop:** `npm i -D playwright` then launch with
+`executablePath: '/opt/pw-browsers/chromium'` (never `playwright install` — the
+pinned version mismatches the preinstalled browser). Chromium's `page.pdf()`
+makes realistic PDF fixtures; Office fixtures build with python `zipfile`. A
+hand-built object-stream PDF (4 pages) is the regression case: the old regex
+counted **0** on it, pdf.js counts 4.
+
 ## CURRENT STATE / IN-FLIGHT (most important)
 Owner is mid-launch, connecting Supabase. Timeline of debugging:
 1. Owner created Supabase project, ran schema.sql (possibly needs RE-RUN for auth trigger + latest seeds — told to re-run; unconfirmed).

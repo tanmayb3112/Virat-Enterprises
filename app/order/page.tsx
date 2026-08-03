@@ -25,6 +25,9 @@ import { inr } from "@/lib/format";
 import { buildOrderWhatsappUrl, branchCode } from "@/lib/whatsapp";
 import type { OrderPayload } from "@/lib/whatsapp";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
+import { countPages, isImageName } from "@/lib/pageCount";
+import type { PageCountResult } from "@/lib/pageCount";
+import { renderThumbnails } from "@/lib/pdfPreview";
 
 /* ------------------------------------------------------------------ */
 /* shared style atoms                                                  */
@@ -137,6 +140,14 @@ export default function OrderPage() {
   // Raw File objects kept out of React state (heavy, non-serializable) —
   // needed at place-order time to upload to the shop's private storage.
   const rawFilesRef = useRef<Map<string, File>>(new Map());
+  // How each file's page count was arrived at (parsed / estimated / manual),
+  // keyed by file id. Kept beside the files rather than inside OrderFile so the
+  // pricing types stay about pricing.
+  const [counts, setCounts] = useState<Record<string, PageCountResult>>({});
+  const [analyzing, setAnalyzing] = useState(false);
+  // Rendered page thumbnails per file id, for the preview step.
+  const [thumbs, setThumbs] = useState<Record<string, string[]>>({});
+  const [thumbsBusy, setThumbsBusy] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -194,11 +205,48 @@ export default function OrderPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placed]);
 
+  // Render page thumbnails for the file being previewed. Deferred to step 3 so
+  // uploading is never held up by rasterising pages nobody has asked to see,
+  // and cached per file id so flipping between tabs is instant.
+  useEffect(() => {
+    if (step !== 3 || !activeFile) return;
+    const id = activeFile.id;
+    if (thumbs[id]) return;
+    const raw = rawFilesRef.current.get(id);
+    if (!raw) return;
+
+    let cancelled = false;
+    setThumbsBusy(true);
+    renderThumbnails(raw, 6)
+      .then((shots) => {
+        if (!cancelled) setThumbs((prev) => ({ ...prev, [id]: shots }));
+      })
+      .catch(() => {
+        if (!cancelled) setThumbs((prev) => ({ ...prev, [id]: [] }));
+      })
+      .finally(() => {
+        if (!cancelled) setThumbsBusy(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [step, activeFile, thumbs]);
+
   /* -------------------------- file handling -------------------------- */
 
   async function onFiles(list: FileList) {
-    const arr = Array.from(list);
+    setAnalyzing(true);
+    try {
+      await addFiles(Array.from(list));
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
+  async function addFiles(arr: File[]) {
     const added: OrderFile[] = [];
+    const newCounts: Record<string, PageCountResult> = {};
     for (const file of arr) {
       if (file.size > 25 * 1024 * 1024) {
         alert(`${file.name} is over the 25 MB per-file limit — please compress it or split it.`);
@@ -206,29 +254,19 @@ export default function OrderPage() {
       }
       const ext = (file.name.split(".").pop() || "").toUpperCase();
       const lower = ext.toLowerCase();
-      let kind: OrderFile["kind"];
-      let pages = 0;
-      if (lower === "pdf") {
-        kind = "pdf";
-        try {
-          const buf = await file.arrayBuffer();
-          const text = new TextDecoder("latin1").decode(new Uint8Array(buf));
-          const m = text.match(/\/Type\s*\/Page[^s]/g);
-          pages = m ? m.length : 0;
-        } catch {
-          pages = 0;
-        }
-      } else if (lower === "jpg" || lower === "jpeg" || lower === "png") {
-        kind = "image";
-        pages = 1;
-      } else {
-        kind = "office";
-        pages = 0;
-      }
+      const kind: OrderFile["kind"] =
+        lower === "pdf" ? "pdf" : isImageName(file.name) ? "image" : "office";
+
+      // Read the real page count for whatever format this is. Formats that
+      // genuinely have no fixed count come back as 0 and ask the customer.
+      const counted = await countPages(file);
+
       const id = uid();
       rawFilesRef.current.set(id, file);
-      added.push({ id, name: file.name, ext, kind, pages, prefs: defaultPrefs() });
+      added.push({ id, name: file.name, ext, kind, pages: counted.pages, prefs: defaultPrefs() });
+      newCounts[id] = counted;
     }
+    setCounts((prev) => ({ ...prev, ...newCounts }));
     setFiles((prev) => {
       const next = [...prev, ...added];
       if (!activeId && next.length) setActiveId(next[0].id);
@@ -238,16 +276,31 @@ export default function OrderPage() {
 
   function removeFile(id: string) {
     rawFilesRef.current.delete(id);
+    setCounts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setThumbs((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     setFiles((prev) => prev.filter((f) => f.id !== id));
   }
   function setFilePages(id: string, val: number) {
-    setFiles((prev) =>
-      prev.map((f) =>
-        f.id === id
-          ? { ...f, pages: Number.isFinite(val) && val > 0 ? Math.floor(val) : 0 }
-          : f
-      )
-    );
+    const pages = Number.isFinite(val) && val > 0 ? Math.floor(val) : 0;
+    // A number the customer typed is a different kind of fact from one read out
+    // of the file — the shop is told which, so it knows what to re-check.
+    setCounts((prev) => ({
+      ...prev,
+      [id]: {
+        pages,
+        source: "manual",
+        note: pages ? `${pages} page${pages === 1 ? "" : "s"} · entered by you` : "",
+      },
+    }));
+    setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, pages } : f)));
   }
   function patchPrefs(patch: Partial<FilePrefs>) {
     if (!activeFile) return;
@@ -270,6 +323,9 @@ export default function OrderPage() {
     const items = files.map((f) => ({
       file_name: f.name,
       page_count: f.pages,
+      // Tells the shop whether the count was read out of the file, estimated, or
+      // typed in by the customer — i.e. what needs verifying before printing.
+      page_count_source: counts[f.id]?.source ?? "unknown",
       prefs: f.prefs,
       line_total: computeFileCost(f).lineTotal,
     }));
@@ -472,7 +528,7 @@ export default function OrderPage() {
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".pdf,.jpg,.jpeg,.png,.docx,.pptx,.xlsx,.doc,.ppt,.xls"
+          accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.heic,.heif,.tif,.tiff,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.odt,.odp,.ods,.txt,.md,.csv,.rtf"
           style={{ display: "none" }}
           onChange={(e) => {
             if (e.target.files) onFiles(e.target.files);
@@ -494,22 +550,25 @@ export default function OrderPage() {
         >
           <div style={{ fontSize: 17, fontWeight: 700 }}>Drop files here, or click to browse</div>
           <div style={{ marginTop: 8, fontSize: 13, color: "#9A968A" }}>
-            PDF, JPG, PNG, DOCX, PPTX, XLSX · max 25 MB per file
+            PDF, images, DOCX, PPTX, ODT, spreadsheets, text · max 25 MB per file
           </div>
         </button>
+
+        {analyzing && (
+          <div style={{ marginTop: 16, fontSize: 13.5, color: "#FFC400", fontWeight: 600 }}>
+            Reading your files…
+          </div>
+        )}
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
           {files.map((f) => {
             const needsPages = f.pages <= 0;
             const badgeColor =
               f.kind === "pdf" ? "#F08A8A" : f.kind === "image" ? "#6FCF8E" : "#FFC400";
-            const meta = needsPages
-              ? "page count needed"
-              : f.kind === "image"
-              ? "1 page · image"
-              : f.kind === "pdf"
-              ? `${f.pages} pages · parsed by pdf.js`
-              : `${f.pages} pages`;
+            const counted = counts[f.id];
+            const meta =
+              counted?.note ||
+              (needsPages ? "page count needed" : `${f.pages} pages`);
             return (
               <div key={f.id} style={{ borderBottom: "1px solid #2E2E29", padding: "18px 4px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -895,6 +954,8 @@ export default function OrderPage() {
     const landscape = p.orient === "landscape";
     const cols = p.nup === 1 ? 1 : 2;
     const blockColor = p.color === "color" ? "#FFC400" : "#C9CDD4";
+    const shots = thumbs[activeFile.id] ?? [];
+    const canRender = activeFile.kind === "pdf" || activeFile.kind === "image";
 
     return (
       <div>
@@ -919,7 +980,35 @@ export default function OrderPage() {
             gap: 20,
           }}
         >
-          {Array.from({ length: sheetCount }).map((_, i) => {
+          {/* Real pages, rendered from the customer's own file. */}
+          {shots.map((src, i) => (
+            <div key={`shot-${i}`}>
+              <div
+                style={{
+                  background: "#FCFCFA",
+                  border: "1px solid #3E3E36",
+                  borderRadius: 4,
+                  overflow: "hidden",
+                  // The preview honours the chosen colour mode, so a customer
+                  // picking B/W sees what B/W will actually look like.
+                  filter: p.color === "bw" ? "grayscale(1)" : undefined,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={`Page ${i + 1} of ${activeFile.name}`}
+                  style={{ width: "100%", display: "block" }}
+                />
+              </div>
+              <div className={mono} style={{ fontSize: 11.5, color: "#9A968A", marginTop: 7 }}>
+                Page {i + 1}
+              </div>
+            </div>
+          ))}
+
+          {/* No renderer for this format — fall back to the layout schematic. */}
+          {shots.length === 0 && Array.from({ length: sheetCount }).map((_, i) => {
             const isBack = p.sides === "double" && i % 2 === 1;
             const label = `Sheet ${i + 1}${isBack ? " · back" : ""}`;
             return (
@@ -976,7 +1065,19 @@ export default function OrderPage() {
         </div>
 
         <div style={{ marginTop: 20, fontSize: 12.5, color: "#6E6B62", lineHeight: 1.5 }}>
-          Rendered with pdf.js in production — thumbnails reflect colour, N-up and single/double side.
+          {thumbsBusy
+            ? "Rendering your pages…"
+            : shots.length > 0
+            ? `Your actual pages${
+                activeFile.pages > shots.length
+                  ? ` — first ${shots.length} of ${activeFile.pages}`
+                  : ""
+              }. Colour mode is applied; the job prints ${cost.sheets} sheet${
+                cost.sheets === 1 ? "" : "s"
+              } per the settings above.`
+            : canRender
+            ? "Could not render this file — the shop will open it before printing."
+            : `${activeFile.ext} files cannot be previewed in the browser. The layout above shows how the sheets will be arranged; the shop opens the file before printing.`}
         </div>
       </div>
     );
