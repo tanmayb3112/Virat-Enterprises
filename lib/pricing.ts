@@ -242,11 +242,15 @@ export function haversineKm(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// null distance means the address has not been geocoded yet. That must never
+// resolve to free delivery — an unknown distance used to come from a canned
+// table and a draggable slider, which handed free delivery to anyone who asked.
 export function isFreeDelivery(
-  distanceKm: number,
+  distanceKm: number | null,
   orderTotal: number,
   radiusKm: number,
   minOrder: number
 ): boolean {
+  if (distanceKm == null) return false;
   return distanceKm <= radiusKm && orderTotal > minOrder;
 }

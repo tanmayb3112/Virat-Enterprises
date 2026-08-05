@@ -6,6 +6,7 @@ import {
   computeOrder,
   computeFileCost,
   isFreeDelivery,
+  haversineKm,
 } from "@/lib/pricing";
 import type {
   OrderFile,
@@ -69,8 +70,6 @@ const STEP_TITLES: Record<number, string> = {
   5: "Delivery & payment",
 };
 
-const DEMO_KM = [1.2, 2.4, 3.8, 5.1, 6.5, 8.0];
-const demoKm = (i: number) => DEMO_KM[i] ?? 1.2 + i * 1.3;
 const MAP_PINS = [
   { l: "22%", t: "30%" },
   { l: "55%", t: "22%" },
@@ -128,7 +127,11 @@ export default function OrderPage() {
     "delivery"
   );
   const [addr, setAddr] = useState({ line1: "", area: "", pin: "" });
-  const [distance, setDistance] = useState<number>(DEMO_KM[0]);
+  // Real distance from the selected branch, resolved by /api/geocode from the
+  // customer's address. null = not known yet, which must never read as "free".
+  const [distance, setDistance] = useState<number | null>(null);
+  const [geo, setGeo] = useState<{ lat: number; lng: number; formatted: string } | null>(null);
+  const [geoState, setGeoState] = useState<"idle" | "busy" | "ok" | "failed" | "unconfigured">("idle");
   const [utr, setUtr] = useState("");
   const [custName, setCustName] = useState("");
   const [custPhone, setCustPhone] = useState("");
@@ -148,6 +151,10 @@ export default function OrderPage() {
   // Rendered page thumbnails per file id, for the preview step.
   const [thumbs, setThumbs] = useState<Record<string, string[]>>({});
   const [thumbsBusy, setThumbsBusy] = useState(false);
+  // Which files have had rendering kicked off. A ref rather than derived from
+  // `thumbs`, because thumbs changes on every streamed page and re-running the
+  // effect would cancel the pages still to come.
+  const thumbStartedRef = useRef<Set<string>>(new Set());
   const [moreOpen, setMoreOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -205,19 +212,81 @@ export default function OrderPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placed]);
 
+  // Geocode the typed address and measure the real distance to the branch.
+  // Debounced because this fires while the customer is still typing, and each
+  // call costs a Google request. Pickup orders never geocode.
+  useEffect(() => {
+    if (deliveryType !== "delivery") {
+      setDistance(null);
+      setGeo(null);
+      setGeoState("idle");
+      return;
+    }
+    const line1 = addr.line1.trim();
+    const area = addr.area.trim();
+    const pin = addr.pin.trim();
+    if (!line1 || (!area && !pin)) {
+      setDistance(null);
+      setGeo(null);
+      setGeoState("idle");
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setGeoState("busy");
+      try {
+        const res = await fetch("/api/geocode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ line1, area, pin, branchId }),
+        });
+        const out = await res.json();
+        if (cancelled) return;
+        if (out.ok) {
+          setDistance(out.km);
+          setGeo({ lat: out.lat, lng: out.lng, formatted: out.formatted });
+          setGeoState("ok");
+        } else {
+          // Unknown distance, so no free-delivery promise — isFreeDelivery
+          // treats null as not free.
+          setDistance(null);
+          setGeo(null);
+          setGeoState(out.error === "not_configured" ? "unconfigured" : "failed");
+        }
+      } catch {
+        if (cancelled) return;
+        setDistance(null);
+        setGeo(null);
+        setGeoState("failed");
+      }
+    }, 900);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [addr.line1, addr.area, addr.pin, branchId, deliveryType]);
+
   // Render page thumbnails for the file being previewed. Deferred to step 3 so
   // uploading is never held up by rasterising pages nobody has asked to see,
   // and cached per file id so flipping between tabs is instant.
   useEffect(() => {
     if (step !== 3 || !activeFile) return;
     const id = activeFile.id;
-    if (thumbs[id]) return;
+    if (thumbStartedRef.current.has(id)) return;
+    thumbStartedRef.current.add(id);
     const raw = rawFilesRef.current.get(id);
     if (!raw) return;
 
     let cancelled = false;
     setThumbsBusy(true);
-    renderThumbnails(raw, 6)
+    // Each page is appended the moment it is ready, so the template placeholders
+    // are replaced one at a time instead of all at the end.
+    renderThumbnails(raw, 6, (url) => {
+      if (cancelled) return;
+      setThumbs((prev) => ({ ...prev, [id]: [...(prev[id] ?? []), url] }));
+    })
       .then((shots) => {
         if (!cancelled) setThumbs((prev) => ({ ...prev, [id]: shots }));
       })
@@ -231,7 +300,7 @@ export default function OrderPage() {
     return () => {
       cancelled = true;
     };
-  }, [step, activeFile, thumbs]);
+  }, [step, activeFile]);
 
   /* -------------------------- file handling -------------------------- */
 
@@ -276,6 +345,7 @@ export default function OrderPage() {
 
   function removeFile(id: string) {
     rawFilesRef.current.delete(id);
+    thumbStartedRef.current.delete(id);
     setCounts((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -336,7 +406,10 @@ export default function OrderPage() {
       binding,
       lamination,
       deliveryType,
-      address: deliveryType === "delivery" ? addr : null,
+      address:
+        deliveryType === "delivery"
+          ? { ...addr, lat: geo?.lat ?? null, lng: geo?.lng ?? null, formatted: geo?.formatted ?? null }
+          : null,
       distanceKm: distance,
       freeDelivery: free,
       subtotal: order.subtotal,
@@ -406,7 +479,9 @@ export default function OrderPage() {
     setBranchId(BRANCHES[0].id);
     setDeliveryType("delivery");
     setAddr({ line1: "", area: "", pin: "" });
-    setDistance(DEMO_KM[0]);
+    setDistance(null);
+    setGeo(null);
+    setGeoState("idle");
     setUtr("");
     setCustName("");
     setCustPhone("");
@@ -956,6 +1031,12 @@ export default function OrderPage() {
     const blockColor = p.color === "color" ? "#FFC400" : "#C9CDD4";
     const shots = thumbs[activeFile.id] ?? [];
     const canRender = activeFile.kind === "pdf" || activeFile.kind === "image";
+    // One slot per page we expect to render, so each template card is replaced
+    // by the real page in place as it arrives — rather than the whole schematic
+    // disappearing the moment the first page lands.
+    const slotCount = canRender
+      ? Math.max(1, Math.min(6, activeFile.kind === "image" ? 1 : activeFile.pages || 1))
+      : sheetCount;
 
     return (
       <div>
@@ -981,7 +1062,7 @@ export default function OrderPage() {
           }}
         >
           {/* Real pages, rendered from the customer's own file. */}
-          {shots.map((src, i) => (
+          {shots.slice(0, slotCount).map((src, i) => (
             <div key={`shot-${i}`}>
               <div
                 style={{
@@ -1007,12 +1088,16 @@ export default function OrderPage() {
             </div>
           ))}
 
-          {/* No renderer for this format — fall back to the layout schematic. */}
-          {shots.length === 0 && Array.from({ length: sheetCount }).map((_, i) => {
+          {/* Template placeholders for slots not yet rendered — and permanently
+              for formats the browser cannot render. */}
+          {Array.from({ length: Math.max(0, slotCount - shots.length) }).map((_, k) => {
+            const i = shots.length + k;
             const isBack = p.sides === "double" && i % 2 === 1;
-            const label = `Sheet ${i + 1}${isBack ? " · back" : ""}`;
+            const label = canRender
+              ? `Page ${i + 1}`
+              : `Sheet ${i + 1}${isBack ? " · back" : ""}`;
             return (
-              <div key={i}>
+              <div key={`slot-${i}`}>
                 <div
                   style={{
                     background: "#FCFCFA",
@@ -1066,7 +1151,9 @@ export default function OrderPage() {
 
         <div style={{ marginTop: 20, fontSize: 12.5, color: "#6E6B62", lineHeight: 1.5 }}>
           {thumbsBusy
-            ? "Rendering your pages…"
+            ? shots.length > 0
+              ? `Showing page ${shots.length} of ${slotCount} — still rendering…`
+              : "Preparing your preview…"
             : shots.length > 0
             ? `Your actual pages${
                 activeFile.pages > shots.length
@@ -1087,6 +1174,11 @@ export default function OrderPage() {
   function renderStep4() {
     return (
       <div>
+        {deliveryType === "delivery" && !geo && (
+          <div style={{ marginBottom: 14, fontSize: 12.5, color: "#6E6B62", lineHeight: 1.5 }}>
+            Distances appear once you enter your delivery address on the next step.
+          </div>
+        )}
         <div
           style={{
             border: "1px solid #2E2E29",
@@ -1112,10 +1204,7 @@ export default function OrderPage() {
             return (
               <div
                 key={b.id}
-                onClick={() => {
-                  setBranchId(b.id);
-                  setDistance(demoKm(i));
-                }}
+                onClick={() => setBranchId(b.id)}
                 className={mono}
                 style={{
                   position: "absolute",
@@ -1172,10 +1261,7 @@ export default function OrderPage() {
             return (
               <button
                 key={b.id}
-                onClick={() => {
-                  setBranchId(b.id);
-                  setDistance(demoKm(i));
-                }}
+                onClick={() => setBranchId(b.id)}
                 style={{
                   textAlign: "left",
                   background: "#1C1C18",
@@ -1200,7 +1286,9 @@ export default function OrderPage() {
                     className={mono}
                     style={{ fontSize: 12, fontWeight: 700, color: "#FFC400" }}
                   >
-                    {demoKm(i).toFixed(1)} km
+                    {geo && b.lat != null && b.lng != null
+                      ? `${haversineKm(geo.lat, geo.lng, b.lat, b.lng).toFixed(1)} km`
+                      : ""}
                   </div>
                 </div>
                 <div
@@ -1291,20 +1379,21 @@ export default function OrderPage() {
               >
                 <div style={{ color: "#9A968A" }}>Distance from {branchName}</div>
                 <div className={mono} style={{ fontWeight: 700 }}>
-                  {distance.toFixed(1)} km
+                  {distance == null ? "—" : `${distance.toFixed(1)} km`}
                 </div>
               </div>
-              <input
-                type="range"
-                min={0.4}
-                max={12}
-                step={0.1}
-                value={distance}
-                onChange={(e) => setDistance(Number(e.target.value))}
-                style={{ width: "100%", marginTop: 10 }}
-              />
-              <div style={{ fontSize: 11.5, color: "#6E6B62" }}>
-                Prototype: drag to simulate the geocoded distance.
+              <div style={{ fontSize: 11.5, color: "#6E6B62", marginTop: 8, lineHeight: 1.5 }}>
+                {geoState === "busy"
+                  ? "Locating your address…"
+                  : geoState === "ok"
+                  ? `Straight-line distance to ${branchName}${
+                      geo?.formatted ? ` · ${geo.formatted}` : ""
+                    }`
+                  : geoState === "unconfigured"
+                  ? "Address lookup is not switched on yet — the shop will confirm the delivery charge."
+                  : geoState === "failed"
+                  ? "Could not find that address — check it, or the shop will confirm the delivery charge."
+                  : "Enter your address above to work out the distance."}
               </div>
             </div>
             <div>
@@ -1687,7 +1776,9 @@ export default function OrderPage() {
         deliveryType === "delivery"
           ? `${addr.line1}, ${addr.area} ${addr.pin}`.trim()
           : undefined,
-      distanceKm: distance,
+      // Omitted rather than null when the address has not geocoded, so the
+      // WhatsApp message simply leaves the distance line out.
+      distanceKm: distance ?? undefined,
       freeDelivery: free,
       total: order.total,
       utr,
