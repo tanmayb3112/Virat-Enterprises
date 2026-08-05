@@ -148,6 +148,56 @@ The worker is copied to `public/pdf.worker.min.mjs` by
 a stable URL the browser resolves, rather than bundler asset-module behaviour
 that differs between dev, build and Vercel.
 
+## DELIVERY DISTANCE — was fake, now geocoded
+The wizard shipped with `DEMO_KM = [1.2, 2.4, ...]` keyed by branch index, and a
+**slider** in step 5 captioned "Prototype: drag to simulate the geocoded
+distance". The address was never geocoded (`haversineKm` existed, unused). Since
+free delivery is "within 3 km and above ₹500", **any customer could drag to
+1.2 km and take free delivery** — revenue leakage, not cosmetics.
+
+Now: `POST /api/geocode` takes `{line1, area, pin, branchId}`, geocodes via Google
+server-side and returns straight-line km plus lat/lng. Requires
+`GOOGLE_MAPS_API_KEY` — **server-side only**, never `NEXT_PUBLIC_`, or the key is
+readable in the browser and billable by anyone.
+- The slider is gone. `distance` is `number | null`; `isFreeDelivery` now takes
+  `number | null` and **returns false for null** — an unknown distance must never
+  read as free.
+- Debounced 900ms (fires while typing; each call is billable). Pickup never
+  geocodes. Requires line1 plus area-or-pin, else a half-typed address geocodes
+  to the middle of Pune and quietly grants free delivery.
+- States surfaced to the customer: locating / distance shown / "lookup not
+  switched on" (no key) / "could not find that address" — the last two say the
+  shop will confirm the charge.
+- Branch cards show real per-branch km once the address resolves; blank before,
+  with a note saying so (address is collected on step 5, after branch choice).
+- Geocoded lat/lng now ride along in the order's `address` jsonb, so the
+  dashboard's Uber deep link gets a real drop pin instead of the branch's own.
+
+Straight-line, not road distance — deliberately customer-favourable at the radius
+boundary; staff can still adjust a specific order.
+
+## PREVIEW: template-then-real (owner's call, Blinkit-style perceived speed)
+Measured on the real UI with a 20-page PDF (CPU-throttled to emulate phones):
+
+| Device | Page count (incl. pdf.js load) | First real page | All 6 |
+|---|---|---|---|
+| Desktop | 344ms | 304ms | 468ms |
+| 4× (mid-range) | 699ms | 372ms | 963ms |
+| 6× (budget) | 1070ms | 549ms | 1118ms |
+
+**Page count does not affect render cost** — rendering is capped at the first 6
+pages, so a 20-page doc costs the same as a 6-page one. pdf.js is 142KB gzipped,
+downloaded once on first use then cached.
+
+Pages now **stream** (`renderThumbnails(file, limit, onPage)`): each slot shows a
+template card and is replaced by the real page as it rasterises, so the first real
+page lands in ~0.4–0.55s on a phone instead of waiting ~1.2s for the batch.
+Office formats keep the template permanently.
+
+⚠️ `thumbStartedRef` (a ref) gates whether rendering has begun — **not**
+`thumbs[id]`. Depending on `thumbs` put it in the effect's dep array, so every
+streamed page re-ran the effect and its cleanup cancelled the remaining pages.
+
 **Verification loop:** `npm i -D playwright` then launch with
 `executablePath: '/opt/pw-browsers/chromium'` (never `playwright install` — the
 pinned version mismatches the preinstalled browser). Chromium's `page.pdf()`
